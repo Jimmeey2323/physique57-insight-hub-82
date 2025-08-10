@@ -214,8 +214,11 @@ export interface DataTableProps {
 // Enhanced Year-on-Year table props interface
 export interface EnhancedYearOnYearTableProps {
   data: SalesData[];
+  loading?: boolean;
+  activeMetric?: YearOnYearMetricType;
+  onMetricChange?: (metric: YearOnYearMetricType) => void;
+  onRowClick?: (row: any) => void;
   filters?: FilterOptions;
-  onRowClick: (row: any) => void;
   collapsedGroups?: Set<string>;
   onGroupToggle?: (groupKey: string) => void;
   selectedMetric?: YearOnYearMetricType;
@@ -233,4 +236,11 @@ export interface DrillDownModalProps {
   onClose: () => void;
   data: any;
   type: 'paymentMethod' | 'metric' | 'product' | 'category' | 'member' | 'soldBy' | 'client-conversion' | 'trainer' | 'location';
+}
+
+export interface SourceDataModalProps {
+  open: boolean;
+  onClose: () => void;
+  data: any[];
+  title: string;
 }

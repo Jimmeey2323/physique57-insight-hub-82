@@ -85,7 +85,7 @@ const SalesAnalytics = () => {
             onMetricChange={setActiveMetric}
             onRowClick={handleRowClick}
           />
-          <SalesAnalyticsSection />
+          <SalesAnalyticsSection data={salesData || []} />
         </main>
       </div>
       
