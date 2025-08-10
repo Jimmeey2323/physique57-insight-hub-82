@@ -12,7 +12,7 @@ import { Home, Users } from 'lucide-react';
 import { Footer } from '@/components/ui/footer';
 
 const ClientRetention = () => {
-  const { loading } = useNewClientData();
+  const { data, loading } = useNewClientData();
   const { isLoading, setLoading } = useGlobalLoading();
   const navigate = useNavigate();
 
@@ -72,7 +72,7 @@ const ClientRetention = () => {
       <div className="container mx-auto px-6 py-8">
         <main className="space-y-8">
           <NewCsvDataTable />
-          <NewClientSection />
+          <NewClientSection data={data} />
         </main>
       </div>
       

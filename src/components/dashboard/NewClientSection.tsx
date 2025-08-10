@@ -1,10 +1,11 @@
+
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DataTable } from './DataTable';
 import { InteractiveChart } from './InteractiveChart';
-import { AutoCloseFilterSection } from './AutoCloseFilterSection';
+import { NewClientFilterSection } from './NewClientFilterSection';
 import { ClientConversionCharts } from './ClientConversionCharts';
 import { ClientAcquisitionFunnel } from './ClientAcquisitionFunnel';
 import { ClientConversionTopBottomLists } from './ClientConversionTopBottomLists';
@@ -162,14 +163,13 @@ export const NewClientSection: React.FC<NewClientSectionProps> = ({
   return (
     <>
       <div className="space-y-8">
-        {/* Filter and Location Tabs */}
+        {/* Filter Section */}
         <div className="space-y-6">
           {/* Filters */}
-          <AutoCloseFilterSection
+          <NewClientFilterSection
             filters={filters}
             onFiltersChange={setFilters}
-            onReset={resetFilters}
-            isClientSection={true}
+            data={data || []}
           />
 
           {/* Conversion Charts */}
