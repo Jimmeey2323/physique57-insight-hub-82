@@ -12,7 +12,7 @@ import { ClientConversionMetricCards } from './ClientConversionMetricCards';
 import { ClientConversionDataTable } from './ClientConversionDataTable';
 import { SourceDataModal } from '@/components/ui/SourceDataModal';
 import { DrillDownModal } from './DrillDownModal';
-import { Eye, BarChart3, Users, Target, TrendingUp, Database } from 'lucide-react';
+import { Eye, BarChart3, Users, Target, TrendingUp, Database, Activity, UserCheck, Percent } from 'lucide-react';
 import { NewClientData, NewClientFilterOptions } from '@/types/dashboard';
 
 interface NewClientSectionProps {
@@ -22,7 +22,7 @@ interface NewClientSectionProps {
 export const NewClientSection: React.FC<NewClientSectionProps> = ({ data }) => {
   const [showSourceData, setShowSourceData] = useState(false);
   const [drillDownData, setDrillDownData] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('metrics');
   const [filters, setFilters] = useState<NewClientFilterOptions>({
     dateRange: { start: '', end: '' },
     location: [],
@@ -92,6 +92,27 @@ export const NewClientSection: React.FC<NewClientSectionProps> = ({ data }) => {
 
   const filteredData = useMemo(() => applyFilters(data || []), [data, filters]);
 
+  // Calculate key metrics
+  const metrics = useMemo(() => {
+    const totalClients = filteredData.length;
+    const newMembers = filteredData.filter(c => c.isNew === 'Yes').length;
+    const convertedMembers = filteredData.filter(c => c.conversionStatus === 'Converted').length;
+    const retainedMembers = filteredData.filter(c => c.retentionStatus === 'Retained').length;
+    const trialsCompleted = filteredData.filter(c => c.visitsPostTrial > 0).length;
+    
+    const leadToTrialConversion = totalClients > 0 ? (trialsCompleted / totalClients) * 100 : 0;
+    const trialToMemberConversion = trialsCompleted > 0 ? (convertedMembers / trialsCompleted) * 100 : 0;
+
+    return {
+      newMembers,
+      convertedMembers,
+      retainedMembers,
+      trialsCompleted,
+      leadToTrialConversion,
+      trialToMemberConversion
+    };
+  }, [filteredData]);
+
   const handleItemClick = (item: any) => {
     console.log('Item clicked:', item);
     setDrillDownData(item);
@@ -126,36 +147,87 @@ export const NewClientSection: React.FC<NewClientSectionProps> = ({ data }) => {
         data={data || []}
       />
 
-      {/* Summary Badge */}
-      <div className="flex items-center gap-4">
-        <Badge variant="outline" className="text-blue-600 border-blue-600 bg-blue-50 px-4 py-2">
-          <Users className="w-4 h-4 mr-2" />
-          {filteredData.length} clients analyzed
-        </Badge>
-        <Badge variant="outline" className="text-green-600 border-green-600 bg-green-50 px-4 py-2">
-          <Target className="w-4 h-4 mr-2" />
-          {filteredData.filter(c => c.conversionStatus === 'Converted').length} converted
-        </Badge>
-        <Badge variant="outline" className="text-purple-600 border-purple-600 bg-purple-50 px-4 py-2">
-          <TrendingUp className="w-4 h-4 mr-2" />
-          {filteredData.filter(c => c.retentionStatus === 'Retained').length} retained
-        </Badge>
+      {/* Key Metrics Bar */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Users className="w-4 h-4" />
+              <span className="text-sm font-medium">New Members</span>
+            </div>
+            <div className="text-2xl font-bold">{metrics.newMembers}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Target className="w-4 h-4" />
+              <span className="text-sm font-medium">Converted</span>
+            </div>
+            <div className="text-2xl font-bold">{metrics.convertedMembers}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <UserCheck className="w-4 h-4" />
+              <span className="text-sm font-medium">Retained</span>
+            </div>
+            <div className="text-2xl font-bold">{metrics.retainedMembers}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Activity className="w-4 h-4" />
+              <span className="text-sm font-medium">Trials Completed</span>
+            </div>
+            <div className="text-2xl font-bold">{metrics.trialsCompleted}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-teal-500 to-teal-600 text-white">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Percent className="w-4 h-4" />
+              <span className="text-sm font-medium">Lead → Trial</span>
+            </div>
+            <div className="text-2xl font-bold">{metrics.leadToTrialConversion.toFixed(1)}%</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="w-4 h-4" />
+              <span className="text-sm font-medium">Trial → Member</span>
+            </div>
+            <div className="text-2xl font-bold">{metrics.trialToMemberConversion.toFixed(1)}%</div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 bg-gray-100 p-1 rounded-lg">
-          <TabsTrigger value="overview" className="font-medium">
+        <TabsList className="grid w-full grid-cols-5 bg-gray-100 p-1 rounded-lg">
+          <TabsTrigger value="metrics" className="font-medium">
             <BarChart3 className="w-4 h-4 mr-2" />
-            Overview
+            Metrics
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="font-medium">
-            <TrendingUp className="w-4 h-4 mr-2" />
-            Analytics
-          </TabsTrigger>
-          <TabsTrigger value="performance" className="font-medium">
+          <TabsTrigger value="sources" className="font-medium">
             <Target className="w-4 h-4 mr-2" />
-            Performance
+            Lead Sources
+          </TabsTrigger>
+          <TabsTrigger value="stages" className="font-medium">
+            <Activity className="w-4 h-4 mr-2" />
+            Lead Stages
+          </TabsTrigger>
+          <TabsTrigger value="associates" className="font-medium">
+            <Users className="w-4 h-4 mr-2" />
+            Associates
           </TabsTrigger>
           <TabsTrigger value="detailed" className="font-medium">
             <Database className="w-4 h-4 mr-2" />
@@ -163,19 +235,34 @@ export const NewClientSection: React.FC<NewClientSectionProps> = ({ data }) => {
           </TabsTrigger>
         </TabsList>
 
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-8">
+        {/* Metrics Tab */}
+        <TabsContent value="metrics" className="space-y-8">
           <ClientConversionMetricCards data={filteredData} />
           <ClientAcquisitionFunnel data={filteredData} />
         </TabsContent>
 
-        {/* Analytics Tab */}
-        <TabsContent value="analytics" className="space-y-8">
-          <ClientConversionCharts data={filteredData} />
+        {/* Lead Sources Tab */}
+        <TabsContent value="sources" className="space-y-8">
+          <div className="text-center py-12">
+            <Target className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">Lead Source Analytics</h3>
+            <p className="text-gray-500">MoM, YoY, and Top/Bottom performance by source</p>
+            <p className="text-sm text-gray-400 mt-2">Coming soon...</p>
+          </div>
         </TabsContent>
 
-        {/* Performance Tab */}
-        <TabsContent value="performance" className="space-y-8">
+        {/* Lead Stages Tab */}
+        <TabsContent value="stages" className="space-y-8">
+          <div className="text-center py-12">
+            <Activity className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">Lead Stage Analytics</h3>
+            <p className="text-gray-500">MoM, YoY, and Top/Bottom performance by stage</p>
+            <p className="text-sm text-gray-400 mt-2">Coming soon...</p>
+          </div>
+        </TabsContent>
+
+        {/* Associates Tab */}
+        <TabsContent value="associates" className="space-y-8">
           <ClientConversionTopBottomLists data={filteredData} onItemClick={handleItemClick} />
         </TabsContent>
 
@@ -202,8 +289,7 @@ export const NewClientSection: React.FC<NewClientSectionProps> = ({ data }) => {
           sources={[
             {
               name: "New Clients Data",
-              data: data,
-              description: "Raw client conversion and retention data from Google Sheets"
+              data: data
             }
           ]}
         />
