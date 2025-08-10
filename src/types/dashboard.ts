@@ -1,3 +1,4 @@
+
 import { Icons } from "@/components/ui/icons"
 
 export interface NavItem {
@@ -67,6 +68,75 @@ export interface LeadsData {
   visits: number;
 }
 
+export interface SalesData {
+  memberId: string;
+  customerName: string;
+  customerEmail: string;
+  saleItemId: string;
+  paymentCategory: string;
+  paymentDate: string;
+  paymentValue: number;
+  paidInMoneyCredits: number;
+  paymentVAT: number;
+  paymentItem: string;
+  paymentMethod: string;
+  paymentStatus: string;
+  paymentTransactionId: string;
+  stripeToken: string;
+  soldBy: string;
+  saleReference: string;
+  calculatedLocation: string;
+  cleanedProduct: string;
+  cleanedCategory: string;
+  hostId: string;
+  mrpPreTax: number;
+  mrpPostTax: number;
+  discountAmount: number;
+  discountPercentage: number;
+  membershipType: string;
+  grossRevenue: number;
+  netRevenue: number;
+  grossDiscountPercent: number;
+  netDiscountPercent: number;
+}
+
+export interface NewClientData {
+  memberId: string;
+  customerName: string;
+  customerEmail: string;
+  firstPurchaseDate: string;
+  firstPurchaseValue: number;
+  firstPurchaseCategory: string;
+  firstPurchaseProduct: string;
+  currentStatus: string;
+  totalSpent: number;
+  totalSessions: number;
+  lastPurchaseDate: string;
+  calculatedLocation: string;
+  ltv: number;
+  retentionRate: number;
+  conversionRate: number;
+  acquisitionSource: string;
+  membershipType: string;
+  newClients?: number;
+  conversions?: number;
+  retained?: number;
+  totalLtv?: number;
+}
+
+export interface NewClientFilterOptions {
+  dateRange: {
+    start: string;
+    end: string;
+  };
+  location: string[];
+  acquisitionSource: string[];
+  membershipType: string[];
+  minLtv?: number;
+  maxLtv?: number;
+  status: string[];
+}
+
 export type LeadsMetricType =
   | "totalLeads"
   | "leadToTrialConversion"
@@ -119,11 +189,13 @@ export interface MetricCardData {
   value: string | number;
   icon?: React.ReactNode;
   description?: string;
+  change?: number;
+  calculation?: string;
 }
 
 export interface EnhancedYearOnYearTableProps {
   data: any[];
-  loading: boolean;
+  loading?: boolean;
   activeMetric: YearOnYearMetricType;
   onMetricChange: (value: YearOnYearMetricType) => void;
   onRowClick?: (item: any) => void;

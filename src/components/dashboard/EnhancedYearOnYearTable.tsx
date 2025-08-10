@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { OptimizedTable } from '@/components/ui/OptimizedTable';
 import { YearOnYearMetricTabs } from './YearOnYearMetricTabs';
-import { YearOnYearMetricType } from '@/types/dashboard';
+import { YearOnYearMetricType, SalesData } from '@/types/dashboard';
 import { TrendingUp } from 'lucide-react';
 import { formatCurrency, formatNumber, formatPercentage } from '@/utils/formatters';
 
@@ -18,11 +18,12 @@ interface YearOnYearData {
 }
 
 interface EnhancedYearOnYearTableProps {
-  data: any[];
-  loading: boolean;
+  data: SalesData[];
+  loading?: boolean;
   activeMetric: YearOnYearMetricType;
   onMetricChange: (value: YearOnYearMetricType) => void;
   onRowClick?: (item: any) => void;
+  selectedMetric?: YearOnYearMetricType;
 }
 
 const formatValue = (value: number, metric: YearOnYearMetricType = "revenue"): string => {
@@ -45,27 +46,86 @@ const formatValue = (value: number, metric: YearOnYearMetricType = "revenue"): s
   }
 };
 
+const parseDate = (dateStr: string): Date | null => {
+  if (!dateStr) return null;
+  const ddmmyyyy = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (ddmmyyyy) {
+    const [, day, month, year] = ddmmyyyy;
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  }
+  const date = new Date(dateStr);
+  return isNaN(date.getTime()) ? null : date;
+};
+
+const getMetricValue = (items: SalesData[], metric: YearOnYearMetricType) => {
+  if (!items.length) return 0;
+  const totalRevenue = items.reduce((sum, item) => sum + (item.paymentValue || 0), 0);
+  const totalTransactions = items.length;
+  const uniqueMembers = new Set(items.map(item => item.memberId)).size;
+  const totalUnits = items.length;
+  
+  switch (metric) {
+    case 'revenue':
+      return totalRevenue;
+    case 'transactions':
+      return totalTransactions;
+    case 'members':
+      return uniqueMembers;
+    case 'units':
+      return totalUnits;
+    case 'atv':
+      return totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
+    case 'auv':
+      return totalUnits > 0 ? totalRevenue / totalUnits : 0;
+    case 'asv':
+      return uniqueMembers > 0 ? totalRevenue / uniqueMembers : 0;
+    case 'upt':
+      return totalTransactions > 0 ? totalUnits / totalTransactions : 0;
+    case 'vat':
+      return items.reduce((sum, item) => sum + (item.paymentVAT || 0), 0);
+    default:
+      return 0;
+  }
+};
+
 export const EnhancedYearOnYearTable: React.FC<EnhancedYearOnYearTableProps> = ({
   data,
-  loading,
+  loading = false,
   activeMetric,
   onMetricChange,
   onRowClick
 }) => {
   const processedData = useMemo(() => {
-    if (!data || data.length < 2) return [];
+    if (!data || data.length === 0) return [];
 
-    const currentYearData = data[0];
-    const previousYearData = data[1];
+    // Group data by year
+    const yearGroups: Record<string, SalesData[]> = {};
+    
+    data.forEach(item => {
+      const itemDate = parseDate(item.paymentDate);
+      if (itemDate) {
+        const year = itemDate.getFullYear().toString();
+        if (!yearGroups[year]) {
+          yearGroups[year] = [];
+        }
+        yearGroups[year].push(item);
+      }
+    });
 
-    const currentYearValue = currentYearData?.[activeMetric] || 0;
-    const previousYearValue = previousYearData?.[activeMetric] || 0;
+    const years = Object.keys(yearGroups).sort().reverse(); // Most recent first
+    if (years.length < 2) return [];
+
+    const currentYear = years[0];
+    const previousYear = years[1];
+
+    const currentYearValue = getMetricValue(yearGroups[currentYear] || [], activeMetric);
+    const previousYearValue = getMetricValue(yearGroups[previousYear] || [], activeMetric);
 
     const difference = currentYearValue - previousYearValue;
     const growthRate = previousYearValue !== 0 ? (difference / previousYearValue) * 100 : 0;
 
     return [{
-      year: currentYearData?.year || 'Current',
+      year: `${currentYear} vs ${previousYear}`,
       currentYear: currentYearValue,
       previousYear: previousYearValue,
       difference: difference,
@@ -96,7 +156,7 @@ export const EnhancedYearOnYearTable: React.FC<EnhancedYearOnYearTableProps> = (
             Year-on-Year Performance Comparison
           </CardTitle>
           <Badge variant="outline" className="text-blue-600 border-blue-600 bg-blue-50 px-3 py-1">
-            {processedData.length} Years
+            {processedData.length > 0 ? 'Comparison Available' : 'No Data'}
           </Badge>
         </div>
         
@@ -108,78 +168,76 @@ export const EnhancedYearOnYearTable: React.FC<EnhancedYearOnYearTableProps> = (
       </CardHeader>
       
       <CardContent className="p-0">
-        <OptimizedTable
-          data={processedData}
-          columns={[
-            { 
-              key: 'year', 
-              header: 'Year', 
-              align: 'left',
-              className: 'font-bold text-gray-800'
-            },
-            { 
-              key: 'currentYear', 
-              header: `Current (${activeMetric})`, 
-              align: 'right',
-              render: (value: number) => (
-                <span className="font-bold text-blue-600">
-                  {formatValue(value, activeMetric)}
-                </span>
-              )
-            },
-            { 
-              key: 'previousYear', 
-              header: `Previous (${activeMetric})`, 
-              align: 'right',
-              render: (value: number) => (
-                <span className="font-medium text-gray-600">
-                  {formatValue(value, activeMetric)}
-                </span>
-              )
-            },
-            { 
-              key: 'difference', 
-              header: 'Difference', 
-              align: 'right',
-              render: (value: number) => (
-                <span className={`font-bold ${value >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {value >= 0 ? '+' : ''}{formatValue(value, activeMetric)}
-                </span>
-              )
-            },
-            { 
-              key: 'growthRate', 
-              header: 'Growth Rate', 
-              align: 'center',
-              render: (value: number) => (
-                <Badge 
-                  variant={value >= 0 ? "default" : "destructive"}
-                  className={`px-3 py-1 font-bold w-[80px] justify-center ${
-                    value >= 0 
-                      ? 'bg-green-100 text-green-800 border-green-200' 
-                      : 'bg-red-100 text-red-800 border-red-200'
-                  }`}
-                >
-                  {value >= 0 ? '+' : ''}{value.toFixed(1)}%
-                </Badge>
-              )
-            }
-          ]}
-          loading={loading}
-          maxHeight="600px"
-          stickyHeader={true}
-          onRowClick={onRowClick}
-          showFooter={true}
-          footerData={{
-            year: 'TOTAL',
-            currentYear: processedData.reduce((sum, row) => sum + (row.currentYear || 0), 0),
-            previousYear: processedData.reduce((sum, row) => sum + (row.previousYear || 0), 0),
-            difference: processedData.reduce((sum, row) => sum + (row.difference || 0), 0),
-            growthRate: processedData.length > 0 
-              ? processedData.reduce((sum, row) => sum + (row.growthRate || 0), 0) / processedData.length 
-              : 0
-          }}
-        />
+        {processedData.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">
+            <p className="text-lg">No year-on-year comparison data available</p>
+            <p className="text-sm mt-2">Need data from at least 2 different years</p>
+          </div>
+        ) : (
+          <OptimizedTable
+            data={processedData}
+            columns={[
+              { 
+                key: 'year', 
+                header: 'Comparison', 
+                align: 'left',
+                className: 'font-bold text-gray-800'
+              },
+              { 
+                key: 'currentYear', 
+                header: `Current Year (${activeMetric})`, 
+                align: 'right',
+                render: (value: number) => (
+                  <span className="font-bold text-blue-600">
+                    {formatValue(value, activeMetric)}
+                  </span>
+                )
+              },
+              { 
+                key: 'previousYear', 
+                header: `Previous Year (${activeMetric})`, 
+                align: 'right',
+                render: (value: number) => (
+                  <span className="font-medium text-gray-600">
+                    {formatValue(value, activeMetric)}
+                  </span>
+                )
+              },
+              { 
+                key: 'difference', 
+                header: 'Difference', 
+                align: 'right',
+                render: (value: number) => (
+                  <span className={`font-bold ${value >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {value >= 0 ? '+' : ''}{formatValue(value, activeMetric)}
+                  </span>
+                )
+              },
+              { 
+                key: 'growthRate', 
+                header: 'Growth Rate', 
+                align: 'center',
+                render: (value: number) => (
+                  <Badge 
+                    variant={value >= 0 ? "default" : "destructive"}
+                    className={`px-3 py-1 font-bold w-[80px] justify-center ${
+                      value >= 0 
+                        ? 'bg-green-100 text-green-800 border-green-200' 
+                        : 'bg-red-100 text-red-800 border-red-200'
+                    }`}
+                  >
+                    {value >= 0 ? '+' : ''}{value.toFixed(1)}%
+                  </Badge>
+                )
+              }
+            ]}
+            loading={loading}
+            maxHeight="600px"
+            stickyHeader={true}
+            onRowClick={onRowClick}
+            showFooter={false}
+          />
+        )}
       </CardContent>
     </Card>
   );

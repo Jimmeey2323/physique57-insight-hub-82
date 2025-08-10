@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -237,8 +236,10 @@ export const SalesAnalyticsSection: React.FC<SalesAnalyticsSectionProps> = ({
                     <h2 className="text-2xl font-bold text-gray-900">Year-on-Year Analysis</h2>
                     <EnhancedYearOnYearTable 
                       data={allHistoricData}
+                      loading={false}
+                      activeMetric={activeYoyMetric}
+                      onMetricChange={setActiveYoyMetric}
                       onRowClick={handleRowClick}
-                      selectedMetric={activeYoyMetric}
                     />
                   </section>
                 </TabsContent>
