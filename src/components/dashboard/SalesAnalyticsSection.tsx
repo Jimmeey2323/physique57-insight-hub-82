@@ -19,9 +19,11 @@ import { PaymentMethodMonthOnMonthTable } from './PaymentMethodMonthOnMonthTable
 import { SalesData, FilterOptions, MetricCardData, YearOnYearMetricType } from '@/types/dashboard';
 import { formatCurrency, formatNumber, formatPercentage } from '@/utils/formatters';
 import { cn } from '@/lib/utils';
+
 interface SalesAnalyticsSectionProps {
   data: SalesData[];
 }
+
 const locations = [{
   id: 'kwality',
   name: 'Kwality House, Kemps Corner',
@@ -35,6 +37,7 @@ const locations = [{
   name: 'Kenkere House',
   fullName: 'Kenkere House'
 }];
+
 export const SalesAnalyticsSection: React.FC<SalesAnalyticsSectionProps> = ({
   data
 }) => {
@@ -59,6 +62,11 @@ export const SalesAnalyticsSection: React.FC<SalesAnalyticsSectionProps> = ({
 
   // Helper function to filter data by date range and other filters
   const applyFilters = (rawData: SalesData[], includeHistoric: boolean = false) => {
+    // Add null check for rawData
+    if (!rawData || !Array.isArray(rawData)) {
+      return [];
+    }
+
     let filtered = rawData;
 
     // Apply location filter first
@@ -117,15 +125,18 @@ export const SalesAnalyticsSection: React.FC<SalesAnalyticsSectionProps> = ({
     }
     return filtered;
   };
-  const filteredData = useMemo(() => applyFilters(data), [data, filters, activeLocation]);
+
+  const filteredData = useMemo(() => applyFilters(data || []), [data, filters, activeLocation]);
 
   // Get all historic data for analysis tables (unfiltered by date range)
-  const allHistoricData = useMemo(() => applyFilters(data, true), [data, activeLocation]);
+  const allHistoricData = useMemo(() => applyFilters(data || [], true), [data, activeLocation]);
+
   const handleRowClick = (rowData: any) => {
     console.log('Row clicked with data:', rowData);
     setDrillDownData(rowData);
     setDrillDownType('product');
   };
+
   const handleGroupToggle = (groupKey: string) => {
     const newCollapsed = new Set(collapsedGroups);
     if (newCollapsed.has(groupKey)) {
@@ -135,6 +146,7 @@ export const SalesAnalyticsSection: React.FC<SalesAnalyticsSectionProps> = ({
     }
     setCollapsedGroups(newCollapsed);
   };
+
   const resetFilters = () => {
     setFilters({
       dateRange: {
@@ -148,6 +160,7 @@ export const SalesAnalyticsSection: React.FC<SalesAnalyticsSectionProps> = ({
       paymentMethod: []
     });
   };
+
   return <div className="space-y-8">
       {/* Filter and Location Tabs */}
       <div className="space-y-6">
@@ -156,7 +169,7 @@ export const SalesAnalyticsSection: React.FC<SalesAnalyticsSectionProps> = ({
             <TabsList className="bg-white/90 backdrop-blur-sm p-2 rounded-2xl shadow-xl border-0 grid grid-cols-3 w-full max-w-7xl overflow-hidden min-h-20">
               {locations.map(location => <TabsTrigger key={location.id} value={location.id} className="relative rounded-xl px-4 py-4 font-semibold text-sm transition-all duration-300 ease-out hover:scale-105 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-gray-50">
                   <div className="relative z-10 text-center">
-                    <div className="font-bold ali">{location.name.split(',')[0]}</div>
+                    <div className="font-bold">{location.name.split(',')[0]}</div>
                     <div className="text-xs opacity-80">{location.name.split(',')[1]?.trim()}</div>
                   </div>
                 </TabsTrigger>)}
@@ -202,7 +215,7 @@ export const SalesAnalyticsSection: React.FC<SalesAnalyticsSectionProps> = ({
                 <TabsContent value="yearOnYear" className="mt-8">
                   <section className="space-y-4">
                     <h2 className="text-2xl font-bold text-gray-900">Year-on-Year Analysis</h2>
-                    <EnhancedYearOnYearTable data={allHistoricData} onRowClick={handleRowClick} selectedMetric={activeYoyMetric} />
+                    <EnhancedYearOnYearTable data={allHistoricData} onRowClick={handleRowClick} />
                   </section>
                 </TabsContent>
 
@@ -249,4 +262,5 @@ export const SalesAnalyticsSection: React.FC<SalesAnalyticsSectionProps> = ({
       {drillDownData && <DrillDownModal isOpen={!!drillDownData} onClose={() => setDrillDownData(null)} data={drillDownData} type={drillDownType} />}
     </div>;
 };
+
 export default SalesAnalyticsSection;

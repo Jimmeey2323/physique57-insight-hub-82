@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { SectionLayout } from '@/components/layout/SectionLayout';
 import { SalesAnalyticsSection } from '@/components/dashboard/SalesAnalyticsSection';
@@ -34,14 +35,14 @@ const SalesAnalytics = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-pink-50/20">
       {/* Animated Header Section */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-orange-900 via-red-800 to-pink-900 text-white">
+      <div className="relative overflow-hidden bg-gradient-to-r from-blue-950 via-indigo-900 to-blue-900 text-white">
         <div className="absolute inset-0 bg-black/20" />
         
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-4 -left-4 w-32 h-32 bg-white/10 rounded-full animate-pulse"></div>
-          <div className="absolute top-20 right-10 w-24 h-24 bg-orange-300/20 rounded-full animate-bounce delay-1000"></div>
-          <div className="absolute bottom-10 left-20 w-40 h-40 bg-red-300/10 rounded-full animate-pulse delay-500"></div>
+          <div className="absolute top-20 right-10 w-24 h-24 bg-blue-300/20 rounded-full animate-bounce delay-1000"></div>
+          <div className="absolute bottom-10 left-20 w-40 h-40 bg-indigo-300/10 rounded-full animate-pulse delay-500"></div>
         </div>
         
         <div className="relative px-8 py-12">
@@ -64,11 +65,11 @@ const SalesAnalytics = () => {
                 <span className="font-medium">Sales Performance</span>
               </div>
               
-              <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-white via-orange-100 to-red-100 bg-clip-text text-transparent animate-fade-in-up delay-200">
+              <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-white via-blue-100 to-indigo-100 bg-clip-text text-transparent animate-fade-in-up delay-200">
                 Sales Analytics & Insights
               </h1>
               
-              <p className="text-xl text-orange-100 max-w-2xl mx-auto leading-relaxed animate-fade-in-up delay-300">
+              <p className="text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed animate-fade-in-up delay-300">
                 Comprehensive sales performance analysis across all customer touchpoints
               </p>
             </div>
@@ -79,13 +80,13 @@ const SalesAnalytics = () => {
       <div className="container mx-auto px-6 py-8">
         <main className="space-y-8">
           <EnhancedYearOnYearTable
-            data={salesData}
+            data={salesData || []}
             loading={loading}
             activeMetric={activeMetric}
             onMetricChange={setActiveMetric}
             onRowClick={handleRowClick}
           />
-          <SalesAnalyticsSection />
+          <SalesAnalyticsSection data={salesData || []} />
         </main>
       </div>
       
