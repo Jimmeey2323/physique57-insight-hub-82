@@ -315,11 +315,7 @@ export const EnhancedYearOnYearTable: React.FC<EnhancedYearOnYearTableProps> = (
           </div>
 
           {/* Quick Filter Buttons */}
-          <div className="flex flex-wrap gap-2">
-            {quickFilters.map((filter, index) => <Button key={index} variant={filter.variant} size="sm" onClick={filter.action} className="text-xs transition-all duration-200 hover:scale-105">
-                {filter.label}
-              </Button>)}
-          </div>
+          
           
           <YearOnYearMetricTabs value={selectedMetric} onValueChange={setSelectedMetric} className="w-full" />
         </div>
@@ -330,7 +326,7 @@ export const EnhancedYearOnYearTable: React.FC<EnhancedYearOnYearTableProps> = (
           <table className="min-w-full bg-white border-t border-gray-200 rounded-lg">
             <thead className="bg-gradient-to-r from-purple-700 to-purple-900 text-white font-semibold text-sm uppercase tracking-wider px-4 py-2 sticky top-0 z-20">
               <tr className="bg-gradient-to-r from-blue-700 to-indigo-900 text-white font-semibold text-sm uppercase tracking-wider px-4 py-2 rounded-md">
-                <th className="bg-gradient-to-r from-blue-700 to-indigo-900 text-white font-semibold text-sm uppercase tracking-wider px-4 py-2 rounded-md">
+                <th className="bg-gradient-to-r from-blue-700 to-blue-700 text-white font-semibold text-sm uppercase tracking-wider px-4 py-2 rounded-none">
                   Product/Category
                 </th>
                 {monthlyData.map(({
