@@ -215,7 +215,13 @@ export const SalesAnalyticsSection: React.FC<SalesAnalyticsSectionProps> = ({
                 <TabsContent value="yearOnYear" className="mt-8">
                   <section className="space-y-4">
                     <h2 className="text-2xl font-bold text-gray-900">Year-on-Year Analysis</h2>
-                    <EnhancedYearOnYearTable data={allHistoricData} onRowClick={handleRowClick} />
+                    <EnhancedYearOnYearTable 
+                      data={allHistoricData} 
+                      loading={false}
+                      activeMetric={activeYoyMetric}
+                      onMetricChange={setActiveYoyMetric}
+                      onRowClick={handleRowClick} 
+                    />
                   </section>
                 </TabsContent>
 

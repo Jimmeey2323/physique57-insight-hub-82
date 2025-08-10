@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Area, AreaChart, ComposedChart } from 'recharts';
-import { TrendingUp, PieChart as PieChartIcon, BarChart3, Activity, Download, Maximize2 } from 'lucide-react';
+import { TrendingUp, PieChart as PieChartIcon, BarChart3, Activity, Download, Maximize2, Users } from 'lucide-react';
 import { NewClientData } from '@/types/dashboard';
 import { formatCurrency, formatNumber } from '@/utils/formatters';
 
