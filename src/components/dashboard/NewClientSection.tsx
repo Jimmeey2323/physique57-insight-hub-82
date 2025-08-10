@@ -775,7 +775,7 @@ export const NewClientSection: React.FC = () => {
       />
 
       <SourceDataModal
-        open={showSourceData}
+        isOpen={showSourceData}
         onClose={() => setShowSourceData(false)}
         data={data || []}
         title="Client Conversion Source Data"
