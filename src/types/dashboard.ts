@@ -102,22 +102,45 @@ export interface SalesData {
 
 export interface NewClientData {
   memberId: string;
-  customerName: string;
-  customerEmail: string;
-  firstPurchaseDate: string;
-  firstPurchaseValue: number;
-  firstPurchaseCategory: string;
-  firstPurchaseProduct: string;
-  currentStatus: string;
-  totalSpent: number;
-  totalSessions: number;
-  lastPurchaseDate: string;
-  calculatedLocation: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  firstVisitDate: string;
+  firstVisitEntityName: string;
+  firstVisitType: string;
+  firstVisitLocation: string;
+  paymentMethod: string;
+  membershipUsed: string;
+  homeLocation: string;
+  classNo: number;
+  trainerName: string;
+  isNew: string;
+  visitsPostTrial: number;
+  membershipsBoughtPostTrial: string;
+  purchaseCountPostTrial: number;
   ltv: number;
-  retentionRate: number;
-  conversionRate: number;
-  acquisitionSource: string;
-  membershipType: string;
+  retentionStatus: string;
+  conversionStatus: string;
+  period: string;
+  unique: string;
+  firstPurchase: string;
+  conversionSpan: number;
+  customerName?: string;
+  customerEmail?: string;
+  firstPurchaseDate?: string;
+  firstPurchaseValue?: number;
+  firstPurchaseCategory?: string;
+  firstPurchaseProduct?: string;
+  currentStatus?: string;
+  totalSpent?: number;
+  totalSessions?: number;
+  lastPurchaseDate?: string;
+  calculatedLocation?: string;
+  retentionRate?: number;
+  conversionRate?: number;
+  acquisitionSource?: string;
+  membershipType?: string;
   newClients?: number;
   conversions?: number;
   retained?: number;
@@ -130,11 +153,14 @@ export interface NewClientFilterOptions {
     end: string;
   };
   location: string[];
-  acquisitionSource: string[];
-  membershipType: string[];
+  homeLocation: string[];
+  trainer: string[];
+  paymentMethod: string[];
+  retentionStatus: string[];
+  conversionStatus: string[];
+  isNew: string[];
   minLtv?: number;
   maxLtv?: number;
-  status: string[];
 }
 
 export type LeadsMetricType =

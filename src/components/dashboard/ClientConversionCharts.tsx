@@ -87,7 +87,7 @@ export const ClientConversionCharts: React.FC<ClientConversionChartsProps> = ({ 
       </CardHeader>
       <CardContent>
         <Tabs value={activeChart} onValueChange={setActiveChart} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-gray-100 p-1 rounded-lg">
+          <TabsList className="grid w-full grid-cols-4 bg-gray-100 p-1 rounded-lg">
             <TabsTrigger value="area" className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-md transition-colors">Area Chart</TabsTrigger>
             <TabsTrigger value="line" className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-md transition-colors">Line Chart</TabsTrigger>
             <TabsTrigger value="bar" className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-md transition-colors">Bar Chart</TabsTrigger>
