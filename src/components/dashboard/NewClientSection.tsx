@@ -2,60 +2,29 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { DataTable } from './DataTable';
-import { InteractiveChart } from './InteractiveChart';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NewClientFilterSection } from './NewClientFilterSection';
 import { ClientConversionCharts } from './ClientConversionCharts';
 import { ClientAcquisitionFunnel } from './ClientAcquisitionFunnel';
 import { ClientConversionTopBottomLists } from './ClientConversionTopBottomLists';
+import { ClientConversionMetricCards } from './ClientConversionMetricCards';
+import { ClientConversionDataTable } from './ClientConversionDataTable';
 import { SourceDataModal } from '@/components/ui/SourceDataModal';
 import { DrillDownModal } from './DrillDownModal';
-import { Button } from '@/components/ui/button';
-import { Eye } from 'lucide-react';
+import { Eye, BarChart3, Users, Target, TrendingUp, Database } from 'lucide-react';
 import { NewClientData, NewClientFilterOptions } from '@/types/dashboard';
-import { formatCurrency, formatNumber, formatPercentage } from '@/utils/formatters';
 
 interface NewClientSectionProps {
   data: NewClientData[];
 }
 
-const locations = [{
-  id: 'kwality',
-  name: 'Kwality House, Kemps Corner',
-  fullName: 'Kwality House, Kemps Corner'
-}, {
-  id: 'supreme',
-  name: 'Supreme HQ, Bandra',
-  fullName: 'Supreme HQ, Bandra'
-}, {
-  id: 'kenkere',
-  name: 'Kenkere House',
-  fullName: 'Kenkere House'
-}];
-
-const trainers = [{
-  id: 'trainer1',
-  name: 'Trainer 1'
-}, {
-  id: 'trainer2',
-  name: 'Trainer 2'
-}, {
-  id: 'trainer3',
-  name: 'Trainer 3'
-}];
-
-export const NewClientSection: React.FC<NewClientSectionProps> = ({
-  data
-}) => {
-  const [activeLocation, setActiveLocation] = useState('kwality');
+export const NewClientSection: React.FC<NewClientSectionProps> = ({ data }) => {
   const [showSourceData, setShowSourceData] = useState(false);
   const [drillDownData, setDrillDownData] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('overview');
   const [filters, setFilters] = useState<NewClientFilterOptions>({
-    dateRange: {
-      start: '',
-      end: ''
-    },
+    dateRange: { start: '', end: '' },
     location: [],
     homeLocation: [],
     trainer: [],
@@ -89,42 +58,28 @@ export const NewClientSection: React.FC<NewClientSectionProps> = ({
       });
     }
 
-    // Apply location filter
+    // Apply other filters
     if (filters.location?.length) {
       filtered = filtered.filter(item => filters.location!.includes(item.firstVisitLocation));
     }
-
-    // Apply home location filter
     if (filters.homeLocation?.length) {
       filtered = filtered.filter(item => filters.homeLocation!.includes(item.homeLocation));
     }
-
-    // Apply trainer filter
     if (filters.trainer?.length) {
       filtered = filtered.filter(item => filters.trainer!.includes(item.trainerName));
     }
-
-    // Apply payment method filter
     if (filters.paymentMethod?.length) {
       filtered = filtered.filter(item => filters.paymentMethod!.includes(item.paymentMethod));
     }
-
-    // Apply retention status filter
     if (filters.retentionStatus?.length) {
       filtered = filtered.filter(item => filters.retentionStatus!.includes(item.retentionStatus));
     }
-
-    // Apply conversion status filter
     if (filters.conversionStatus?.length) {
       filtered = filtered.filter(item => filters.conversionStatus!.includes(item.conversionStatus));
     }
-
-    // Apply isNew filter
     if (filters.isNew?.length) {
       filtered = filtered.filter(item => filters.isNew!.includes(item.isNew));
     }
-
-    // Apply LTV range filter
     if (filters.minLTV !== undefined) {
       filtered = filtered.filter(item => (item.ltv || 0) >= filters.minLTV!);
     }
@@ -137,76 +92,123 @@ export const NewClientSection: React.FC<NewClientSectionProps> = ({
 
   const filteredData = useMemo(() => applyFilters(data || []), [data, filters]);
 
-  const resetFilters = () => {
-    setFilters({
-      dateRange: {
-        start: '',
-        end: ''
-      },
-      location: [],
-      homeLocation: [],
-      trainer: [],
-      paymentMethod: [],
-      retentionStatus: [],
-      conversionStatus: [],
-      isNew: [],
-      minLTV: undefined,
-      maxLTV: undefined
-    });
-  };
-
   const handleItemClick = (item: any) => {
     console.log('Item clicked:', item);
     setDrillDownData(item);
   };
 
+  const handleClientClick = (client: NewClientData) => {
+    setDrillDownData({ ...client, type: 'client-detail' });
+  };
+
   return (
-    <>
-      <div className="space-y-8">
-        {/* Filter Section */}
-        <div className="space-y-6">
-          {/* Filters */}
-          <NewClientFilterSection
-            filters={filters}
-            onFiltersChange={setFilters}
-            data={data || []}
-          />
-
-          {/* Conversion Charts */}
-          <ClientConversionCharts data={filteredData} />
-
-          {/* Top/Bottom Lists */}
-          <ClientConversionTopBottomLists data={filteredData} onItemClick={handleItemClick} />
-
-          {/* Acquisition Funnel */}
-          <ClientAcquisitionFunnel data={filteredData} />
-
-          {/* Drill Down Modal */}
-          {drillDownData && (
-            <DrillDownModal
-              isOpen={!!drillDownData}
-              onClose={() => setDrillDownData(null)}
-              data={drillDownData}
-              type="member"
-            />
-          )}
-
-          {/* Source Data Modal */}
-          {showSourceData && (
-            <SourceDataModal
-              open={showSourceData}
-              onOpenChange={setShowSourceData}
-              sources={[
-                {
-                  name: "New Clients",
-                  data: data
-                }
-              ]}
-            />
-          )}
+    <div className="space-y-8">
+      {/* Header Section */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Client Conversion Analytics</h2>
+          <p className="text-gray-600">Comprehensive analysis of client acquisition, conversion, and retention</p>
         </div>
+        <Button
+          variant="outline"
+          onClick={() => setShowSourceData(true)}
+          className="gap-2 bg-white border-gray-200 hover:bg-gray-50"
+        >
+          <Database className="w-4 h-4" />
+          View Source Data
+        </Button>
       </div>
-    </>
+
+      {/* Filter Section */}
+      <NewClientFilterSection
+        filters={filters}
+        onFiltersChange={setFilters}
+        data={data || []}
+      />
+
+      {/* Summary Badge */}
+      <div className="flex items-center gap-4">
+        <Badge variant="outline" className="text-blue-600 border-blue-600 bg-blue-50 px-4 py-2">
+          <Users className="w-4 h-4 mr-2" />
+          {filteredData.length} clients analyzed
+        </Badge>
+        <Badge variant="outline" className="text-green-600 border-green-600 bg-green-50 px-4 py-2">
+          <Target className="w-4 h-4 mr-2" />
+          {filteredData.filter(c => c.conversionStatus === 'Converted').length} converted
+        </Badge>
+        <Badge variant="outline" className="text-purple-600 border-purple-600 bg-purple-50 px-4 py-2">
+          <TrendingUp className="w-4 h-4 mr-2" />
+          {filteredData.filter(c => c.retentionStatus === 'Retained').length} retained
+        </Badge>
+      </div>
+
+      {/* Main Content Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-4 bg-gray-100 p-1 rounded-lg">
+          <TabsTrigger value="overview" className="font-medium">
+            <BarChart3 className="w-4 h-4 mr-2" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="font-medium">
+            <TrendingUp className="w-4 h-4 mr-2" />
+            Analytics
+          </TabsTrigger>
+          <TabsTrigger value="performance" className="font-medium">
+            <Target className="w-4 h-4 mr-2" />
+            Performance
+          </TabsTrigger>
+          <TabsTrigger value="detailed" className="font-medium">
+            <Database className="w-4 h-4 mr-2" />
+            Detailed View
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-8">
+          <ClientConversionMetricCards data={filteredData} />
+          <ClientAcquisitionFunnel data={filteredData} />
+        </TabsContent>
+
+        {/* Analytics Tab */}
+        <TabsContent value="analytics" className="space-y-8">
+          <ClientConversionCharts data={filteredData} />
+        </TabsContent>
+
+        {/* Performance Tab */}
+        <TabsContent value="performance" className="space-y-8">
+          <ClientConversionTopBottomLists data={filteredData} onItemClick={handleItemClick} />
+        </TabsContent>
+
+        {/* Detailed View Tab */}
+        <TabsContent value="detailed" className="space-y-8">
+          <ClientConversionDataTable data={filteredData} onRowClick={handleClientClick} />
+        </TabsContent>
+      </Tabs>
+
+      {/* Modals */}
+      {drillDownData && (
+        <DrillDownModal
+          isOpen={!!drillDownData}
+          onClose={() => setDrillDownData(null)}
+          data={drillDownData}
+          type="member"
+        />
+      )}
+
+      {showSourceData && (
+        <SourceDataModal
+          open={showSourceData}
+          onOpenChange={setShowSourceData}
+          sources={[
+            {
+              name: "New Clients Data",
+              data: data,
+              description: "Raw client conversion and retention data from Google Sheets"
+            }
+          ]}
+        />
+      )}
+    </div>
   );
 };
 
