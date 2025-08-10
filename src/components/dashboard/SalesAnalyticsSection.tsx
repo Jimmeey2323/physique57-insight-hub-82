@@ -120,12 +120,9 @@ export const SalesAnalyticsSection: React.FC<SalesAnalyticsSectionProps> = ({
   };
 
   const filteredData = useMemo(() => applyFilters(data), [data, filters, activeLocation]);
-  const allHistoricData = useMemo(() => applyFilters(data, true), [data, activeLocation]);
 
-  // Get historic data for year-on-year comparison (includes 2024 data)
-  const historicData = useMemo(() => {
-    return applyFilters(data, true);
-  }, [data, activeLocation]);
+  // Get all historic data for analysis tables (unfiltered by date range)
+  const allHistoricData = useMemo(() => applyFilters(data, true), [data, activeLocation]);
 
   const handleRowClick = (rowData: any) => {
     console.log('Row clicked with data:', rowData);
