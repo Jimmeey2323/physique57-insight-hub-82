@@ -1,7 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { SectionLayout } from '@/components/layout/SectionLayout';
 import { SalesAnalyticsSection } from '@/components/dashboard/SalesAnalyticsSection';
-import { EnhancedYearOnYearTable } from '@/components/dashboard/EnhancedYearOnYearTable';
 import { YearOnYearMetricType } from '@/types/dashboard';
 import { RefinedLoader } from '@/components/ui/RefinedLoader';
 import { useSalesData } from '@/hooks/useSalesData';
@@ -78,13 +78,6 @@ const SalesAnalytics = () => {
 
       <div className="container mx-auto px-6 py-8">
         <main className="space-y-8">
-          <EnhancedYearOnYearTable
-            data={salesData}
-            loading={loading}
-            activeMetric={activeMetric}
-            onMetricChange={setActiveMetric}
-            onRowClick={handleRowClick}
-          />
           <SalesAnalyticsSection data={salesData || []} />
         </main>
       </div>

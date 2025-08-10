@@ -42,7 +42,7 @@ export const SalesAnalyticsSection: React.FC<SalesAnalyticsSectionProps> = ({
   const [currentTheme, setCurrentTheme] = useState('classic');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [drillDownData, setDrillDownData] = useState<any>(null);
-  const [drillDownType, setDrillDownType] = useState<'metric' | 'product' | 'category' | 'member'>('metric');
+  const [drillDownType, setDrillDownType] = useState<'metric' | 'product' | 'category' | 'member' | 'soldBy' | 'paymentMethod'>('metric');
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [activeYoyMetric, setActiveYoyMetric] = useState<YearOnYearMetricType>('revenue');
   const [filters, setFilters] = useState<FilterOptions>({
@@ -154,18 +154,29 @@ export const SalesAnalyticsSection: React.FC<SalesAnalyticsSectionProps> = ({
         <Tabs value={activeLocation} onValueChange={setActiveLocation} className="w-full">
           <div className="flex justify-center mb-8">
             <TabsList className="bg-white/90 backdrop-blur-sm p-2 rounded-2xl shadow-xl border-0 grid grid-cols-3 w-full max-w-7xl overflow-hidden min-h-20">
-              {locations.map(location => <TabsTrigger key={location.id} value={location.id} className="relative rounded-xl px-4 py-4 font-semibold text-sm transition-all duration-300 ease-out hover:scale-105 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-gray-50">
+              {locations.map(location => (
+                <TabsTrigger 
+                  key={location.id} 
+                  value={location.id} 
+                  className="relative rounded-xl px-4 py-4 font-semibold text-sm transition-all duration-300 ease-out hover:scale-105 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-gray-50"
+                >
                   <div className="relative z-10 text-center">
-                    <div className="font-bold ali">{location.name.split(',')[0]}</div>
+                    <div className="font-bold">{location.name.split(',')[0]}</div>
                     <div className="text-xs opacity-80">{location.name.split(',')[1]?.trim()}</div>
                   </div>
-                </TabsTrigger>)}
+                </TabsTrigger>
+              ))}
             </TabsList>
           </div>
 
-          {locations.map(location => <TabsContent key={location.id} value={location.id} className="space-y-8">
+          {locations.map(location => (
+            <TabsContent key={location.id} value={location.id} className="space-y-8">
               {/* Filters */}
-              <AutoCloseFilterSection filters={filters} onFiltersChange={setFilters} onReset={resetFilters} />
+              <AutoCloseFilterSection 
+                filters={filters} 
+                onFiltersChange={setFilters} 
+                onReset={resetFilters} 
+              />
 
               {/* Animated Metric Cards */}
               <SalesAnimatedMetricCards data={filteredData} />
@@ -202,51 +213,89 @@ export const SalesAnalyticsSection: React.FC<SalesAnalyticsSectionProps> = ({
                 <TabsContent value="yearOnYear" className="mt-8">
                   <section className="space-y-4">
                     <h2 className="text-2xl font-bold text-gray-900">Year-on-Year Analysis</h2>
-                    <EnhancedYearOnYearTable data={allHistoricData} onRowClick={handleRowClick} selectedMetric={activeYoyMetric} />
+                    <EnhancedYearOnYearTable 
+                      data={allHistoricData} 
+                      loading={false}
+                      activeMetric={activeYoyMetric}
+                      onMetricChange={setActiveYoyMetric}
+                      onRowClick={handleRowClick} 
+                    />
                   </section>
                 </TabsContent>
 
                 <TabsContent value="monthOnMonth" className="mt-8">
                   <section className="space-y-4">
                     <h2 className="text-2xl font-bold text-gray-900">Month-on-Month Analysis</h2>
-                    <MonthOnMonthTable data={allHistoricData} onRowClick={handleRowClick} collapsedGroups={collapsedGroups} onGroupToggle={handleGroupToggle} selectedMetric={activeYoyMetric} />
+                    <MonthOnMonthTable 
+                      data={allHistoricData} 
+                      onRowClick={handleRowClick} 
+                      collapsedGroups={collapsedGroups} 
+                      onGroupToggle={handleGroupToggle} 
+                      selectedMetric={activeYoyMetric} 
+                    />
                   </section>
                 </TabsContent>
 
                 <TabsContent value="productPerformance" className="mt-8">
                   <section className="space-y-4">
                     <h2 className="text-2xl font-bold text-gray-900">Product Performance Analysis</h2>
-                    <ProductPerformanceTable data={allHistoricData} onRowClick={handleRowClick} selectedMetric={activeYoyMetric} />
+                    <ProductPerformanceTable 
+                      data={allHistoricData} 
+                      onRowClick={handleRowClick} 
+                      selectedMetric={activeYoyMetric} 
+                    />
                   </section>
                 </TabsContent>
 
                 <TabsContent value="categoryPerformance" className="mt-8">
                   <section className="space-y-4">
                     <h2 className="text-2xl font-bold text-gray-900">Category Performance Analysis</h2>
-                    <CategoryPerformanceTable data={allHistoricData} onRowClick={handleRowClick} selectedMetric={activeYoyMetric} />
+                    <CategoryPerformanceTable 
+                      data={allHistoricData} 
+                      onRowClick={handleRowClick} 
+                      selectedMetric={activeYoyMetric} 
+                    />
                   </section>
                 </TabsContent>
 
                 <TabsContent value="soldByAnalysis" className="mt-8">
                   <section className="space-y-4">
                     <h2 className="text-2xl font-bold text-gray-900">Sold By Analysis</h2>
-                    <SoldByMonthOnMonthTable data={allHistoricData} onRowClick={handleRowClick} selectedMetric={activeYoyMetric} />
+                    <SoldByMonthOnMonthTable 
+                      data={allHistoricData} 
+                      onRowClick={handleRowClick} 
+                      selectedMetric={activeYoyMetric} 
+                    />
                   </section>
                 </TabsContent>
 
                 <TabsContent value="paymentMethodAnalysis" className="mt-8">
                   <section className="space-y-4">
                     <h2 className="text-2xl font-bold text-gray-900">Payment Method Analysis</h2>
-                    <PaymentMethodMonthOnMonthTable data={allHistoricData} onRowClick={handleRowClick} selectedMetric={activeYoyMetric} />
+                    <PaymentMethodMonthOnMonthTable 
+                      data={allHistoricData} 
+                      onRowClick={handleRowClick} 
+                      selectedMetric={activeYoyMetric} 
+                    />
                   </section>
                 </TabsContent>
               </Tabs>
-            </TabsContent>)}
+            </TabsContent>
+          ))}
         </Tabs>
       </div>
 
       {/* Drill Down Modal */}
-      {drillDownData && <DrillDownModal isOpen={!!drillDownData} onClose={() => setDrillDownData(null)} data={drillDownData} type={drillDownType} />}
-    </div>;
+      {drillDownData && (
+        <DrillDownModal 
+          isOpen={!!drillDownData} 
+          onClose={() => setDrillDownData(null)} 
+          data={drillDownData} 
+          type={drillDownType} 
+        />
+      )}
+    </div>
+  );
 };
+
 export default SalesAnalyticsSection;
