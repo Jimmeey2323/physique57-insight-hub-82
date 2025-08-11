@@ -65,20 +65,21 @@ export const useGoogleSheets = () => {
         return;
       }
 
-      const headers = rows[0];
       const salesData: SalesData[] = rows.slice(1).map((row: any[]) => ({
         memberId: row[0] || '',
         customerName: row[1] || '',
         customerEmail: row[2] || '',
+        payingMemberId: row[0] || '', // Using Member ID for consistency
         saleItemId: row[3] || '',
         paymentCategory: row[4] || '',
+        membershipType: row[24] || '',
         paymentDate: row[5] || '',
         paymentValue: parseFloat(row[6]) || 0,
         paidInMoneyCredits: parseFloat(row[7]) || 0,
         paymentVAT: parseFloat(row[8]) || 0,
         paymentItem: row[9] || '',
-        paymentMethod: row[10] || '',
         paymentStatus: row[11] || '',
+        paymentMethod: row[10] || '',
         paymentTransactionId: row[12] || '',
         stripeToken: row[13] || '',
         soldBy: row[14] || '',
@@ -86,19 +87,17 @@ export const useGoogleSheets = () => {
         calculatedLocation: row[16] || '',
         cleanedProduct: row[17] || '',
         cleanedCategory: row[18] || '',
-        hostId: row[19] || '',
-        mrpPreTax: parseFloat(row[20]) || 0,
-        mrpPostTax: parseFloat(row[21]) || 0,
         discountAmount: parseFloat(row[22]) || 0,
-        discountPercentage: parseFloat(row[23]) || 0,
-        membershipType: row[24] || '',
-        // Calculated fields for compatibility
         grossRevenue: parseFloat(row[21]) || 0, // MRP Post Tax
+        preTaxMrp: parseFloat(row[20]) || 0, // MRP Pre Tax
+        vat: parseFloat(row[8]) || 0, // Payment VAT
         netRevenue: parseFloat(row[6]) || 0, // Payment Value
-        grossDiscountPercent: parseFloat(row[23]) || 0, // Discount Percentage
-        netDiscountPercent: parseFloat(row[23]) || 0 // Same as gross for now
+        postTaxMrp: parseFloat(row[21]) || 0, // MRP Post Tax
+        grossDiscountPercent: parseFloat(row[23]) || 0,
+        netDiscountPercent: parseFloat(row[23]) || 0
       }));
 
+      console.log('Sales data loaded:', salesData.length, 'records');
       setData(salesData);
       setError(null);
     } catch (err) {
