@@ -1,3 +1,4 @@
+
 export interface SalesData {
   memberId: string;
   customerName: string;

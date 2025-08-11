@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Users, TrendingUp, BarChart3, Calendar, Target, Award, DollarSign, Activity, Building2, MapPin, Crown, Trophy, Star } from 'lucide-react';
+import { Users, TrendingUp, BarChart3, Calendar, Target, Award, DollarSign, Activity, Building2, MapPin, Crown, Trophy, Star, Zap } from 'lucide-react';
 import { MetricCard } from './MetricCard';
 import { TrainerFilterSection } from './TrainerFilterSection';
 import { TopBottomSellers } from './TopBottomSellers';
@@ -40,7 +40,7 @@ export const TrainerPerformanceSection = () => {
   const { data: rawData, isLoading, error } = usePayrollData();
   const [activeLocation, setActiveLocation] = useState<string>('all');
   const [activeMetric, setActiveMetric] = useState<TrainerMetricType>('totalSessions');
-  const [isFilterCollapsed, setIsFilterCollapsed] = useState(false);
+  const [isFilterCollapsed, setIsFilterCollapsed] = useState(true); // Collapsed by default
   const [quickFilters, setQuickFilters] = useState<Record<string, string[]>>({});
   const [filters, setFilters] = useState({
     location: '',
@@ -89,79 +89,78 @@ export const TrainerPerformanceSection = () => {
     const totalNonEmptySessions = filteredData.reduce((sum, item) => sum + (item.totalNonEmptySessions || 0), 0);
     const avgClassSize = totalNonEmptySessions > 0 ? totalCustomers / totalNonEmptySessions : 0;
 
-    // Fix NaN issues by properly parsing and validating retention/conversion values
-    const validRetentionData = filteredData.filter(item => {
-      const retentionValue = typeof item.retention === 'string' 
-        ? parseFloat(item.retention.replace('%', '') || '0') 
-        : item.retention || 0;
-      return !isNaN(retentionValue) && isFinite(retentionValue);
-    });
+    // Parse conversion and retention rates properly
+    const parseRate = (value: string | number): number => {
+      if (typeof value === 'number') return value;
+      if (typeof value === 'string') {
+        const cleaned = value.replace('%', '');
+        const parsed = parseFloat(cleaned);
+        return isNaN(parsed) ? 0 : parsed;
+      }
+      return 0;
+    };
 
-    const validConversionData = filteredData.filter(item => {
-      const conversionValue = typeof item.conversion === 'string' 
-        ? parseFloat(item.conversion.replace('%', '') || '0') 
-        : item.conversion || 0;
-      return !isNaN(conversionValue) && isFinite(conversionValue);
-    });
-
-    const avgRetention = validRetentionData.length > 0 
-      ? validRetentionData.reduce((sum, item) => {
-          const retentionValue = typeof item.retention === 'string' 
-            ? parseFloat(item.retention.replace('%', '') || '0') 
-            : item.retention || 0;
-          return sum + retentionValue;
-        }, 0) / validRetentionData.length 
+    const avgRetention = filteredData.length > 0 
+      ? filteredData.reduce((sum, item) => sum + parseRate(item.retention || 0), 0) / filteredData.length 
       : 0;
 
-    const avgConversion = validConversionData.length > 0 
-      ? validConversionData.reduce((sum, item) => {
-          const conversionValue = typeof item.conversion === 'string' 
-            ? parseFloat(item.conversion.replace('%', '') || '0') 
-            : item.conversion || 0;
-          return sum + conversionValue;
-        }, 0) / validConversionData.length 
+    const avgConversion = filteredData.length > 0 
+      ? filteredData.reduce((sum, item) => sum + parseRate(item.conversion || 0), 0) / filteredData.length 
       : 0;
 
     const totalNewMembers = filteredData.reduce((sum, item) => sum + (item.new || 0), 0);
     const totalRetained = filteredData.reduce((sum, item) => sum + (item.retained || 0), 0);
     const totalConverted = filteredData.reduce((sum, item) => sum + (item.converted || 0), 0);
 
-    // Top performer by revenue
-    const topPerformer = filteredData.reduce((max, item) => 
+    // Calculate efficiency metrics
+    const revenuePerSession = totalSessions > 0 ? totalRevenue / totalSessions : 0;
+    const utilizationRate = totalSessions > 0 ? ((totalSessions - totalEmptySessions) / totalSessions) * 100 : 0;
+    const revenuePerCustomer = totalCustomers > 0 ? totalRevenue / totalCustomers : 0;
+
+    // Top performers
+    const topRevenueTrainer = filteredData.reduce((max, item) => 
       (item.totalPaid || 0) > (max.totalPaid || 0) ? item : max, 
-      filteredData[0]
+      filteredData[0] || {}
     );
 
-    // Most popular trainer by customers
-    const mostPopular = filteredData.reduce((max, item) => 
+    const topSessionsTrainer = filteredData.reduce((max, item) => 
+      (item.totalSessions || 0) > (max.totalSessions || 0) ? item : max, 
+      filteredData[0] || {}
+    );
+
+    const topCustomersTrainer = filteredData.reduce((max, item) => 
       (item.totalCustomers || 0) > (max.totalCustomers || 0) ? item : max, 
-      filteredData[0]
+      filteredData[0] || {}
     );
 
-    const result = {
+    return {
       totalSessions,
       totalCustomers,
       totalRevenue,
       totalEmptySessions,
       totalNonEmptySessions,
       avgClassSize,
-      avgRetention: isNaN(avgRetention) || !isFinite(avgRetention) ? 0 : avgRetention,
-      avgConversion: isNaN(avgConversion) || !isFinite(avgConversion) ? 0 : avgConversion,
+      avgRetention: isNaN(avgRetention) ? 0 : avgRetention,
+      avgConversion: isNaN(avgConversion) ? 0 : avgConversion,
       totalNewMembers,
       totalRetained,
       totalConverted,
-      topPerformer,
-      mostPopular,
-      trainerCount: new Set(filteredData.map(item => item.teacherName)).size
+      revenuePerSession,
+      utilizationRate,
+      revenuePerCustomer,
+      topRevenueTrainer,
+      topSessionsTrainer,
+      topCustomersTrainer,
+      trainerCount: new Set(filteredData.map(item => item.teacherName)).size,
+      cycleRevenue: filteredData.reduce((sum, item) => sum + (item.cyclePaid || 0), 0),
+      barreRevenue: filteredData.reduce((sum, item) => sum + (item.barrePaid || 0), 0),
+      cycleSessions: filteredData.reduce((sum, item) => sum + (item.cycleSessions || 0), 0),
+      barreSessions: filteredData.reduce((sum, item) => sum + (item.barreSessions || 0), 0)
     };
-
-    return result;
   }, [filteredData]);
 
   const getMetricCards = () => {
-    if (!processedData) {
-      return [];
-    }
+    if (!processedData) return [];
 
     return [
       {
@@ -170,7 +169,7 @@ export const TrainerPerformanceSection = () => {
         change: 12.5,
         icon: 'sessions' as const,
         description: 'Total classes conducted across all trainers',
-        calculation: 'Sum of all cycle and barre sessions'
+        calculation: 'Sum of cycle and barre sessions'
       },
       {
         title: 'Total Students',
@@ -178,7 +177,7 @@ export const TrainerPerformanceSection = () => {
         change: 8.3,
         icon: 'members' as const,
         description: 'Total unique students trained',
-        calculation: 'Sum of all cycle and barre customers'
+        calculation: 'Sum of cycle and barre customers'
       },
       {
         title: 'Total Revenue',
@@ -186,67 +185,58 @@ export const TrainerPerformanceSection = () => {
         change: 15.7,
         icon: 'revenue' as const,
         description: 'Total revenue generated by trainers',
-        calculation: 'Sum of all cycle and barre payments'
+        calculation: 'Sum of cycle and barre payments'
       },
       {
         title: 'Avg Class Size',
         value: processedData.avgClassSize.toFixed(1),
         change: -2.1,
         icon: 'efficiency' as const,
-        description: 'Average number of students per non-empty class',
-        calculation: 'Total customers / Total non-empty sessions'
+        description: 'Average students per non-empty class',
+        calculation: 'Total customers / Non-empty sessions'
       },
       {
-        title: 'Avg Retention',
-        value: `${processedData.avgRetention.toFixed(1)}%`,
+        title: 'Revenue/Session',
+        value: formatCurrency(processedData.revenuePerSession),
         change: 5.2,
-        icon: 'retention' as const,
-        description: 'Average retention rate across trainers',
-        calculation: 'Average of individual trainer retention rates'
+        icon: 'efficiency' as const,
+        description: 'Average revenue per session',
+        calculation: 'Total revenue / Total sessions'
       },
       {
-        title: 'Avg Conversion',
-        value: `${processedData.avgConversion.toFixed(1)}%`,
+        title: 'Utilization Rate',
+        value: `${processedData.utilizationRate.toFixed(1)}%`,
         change: 3.8,
-        icon: 'conversion' as const,
-        description: 'Average conversion rate across trainers',
-        calculation: 'Average of individual trainer conversion rates'
+        icon: 'efficiency' as const,
+        description: 'Percentage of non-empty sessions',
+        calculation: 'Non-empty sessions / Total sessions'
       }
     ];
   };
 
-  const getConversionChartData = () => {
-    if (!filteredData.length) return [];
-    
-    return filteredData.map(trainer => {
-      const conversionValue = typeof trainer.conversion === 'string' 
-        ? parseFloat(trainer.conversion.replace('%', '') || '0') 
-        : trainer.conversion || 0;
-      const retentionValue = typeof trainer.retention === 'string' 
-        ? parseFloat(trainer.retention.replace('%', '') || '0') 
-        : trainer.retention || 0;
-      
-      return {
-        name: trainer.teacherName,
-        conversion: isNaN(conversionValue) || !isFinite(conversionValue) ? 0 : conversionValue,
-        retention: isNaN(retentionValue) || !isFinite(retentionValue) ? 0 : retentionValue,
-        revenue: trainer.totalPaid || 0,
-        sessions: trainer.totalSessions || 0,
-        customers: trainer.totalCustomers || 0
-      };
-    }).sort((a, b) => b.conversion - a.conversion);
+  const getTrainerPerformanceData = () => {
+    return filteredData.map(trainer => ({
+      name: trainer.teacherName,
+      totalValue: trainer.totalPaid || 0,
+      unitsSold: trainer.totalSessions || 0,
+      transactions: trainer.totalSessions || 0,
+      uniqueMembers: trainer.totalCustomers || 0,
+      atv: (trainer.totalPaid || 0) / Math.max(trainer.totalSessions || 1, 1),
+      auv: (trainer.totalPaid || 0) / Math.max(trainer.totalSessions || 1, 1),
+      asv: (trainer.totalPaid || 0) / Math.max(trainer.totalCustomers || 1, 1),
+      upt: trainer.totalSessions || 0,
+      location: trainer.location,
+      month: trainer.monthYear,
+      efficiency: trainer.totalSessions > 0 ? (trainer.totalPaid || 0) / trainer.totalSessions : 0,
+      utilization: trainer.totalSessions > 0 ? ((trainer.totalSessions - (trainer.totalEmptySessions || 0)) / trainer.totalSessions) * 100 : 0
+    }));
   };
 
   const getMonthOnMonthData = () => {
-    if (!filteredData.length) return {
-      data: {},
-      months: [],
-      trainers: []
-    };
+    if (!filteredData.length) return { data: {}, months: [], trainers: [] };
 
     const data: Record<string, Record<string, number>> = {};
     const months = Array.from(new Set(filteredData.map(item => item.monthYear))).sort((a, b) => {
-      // Sort months in descending order (most recent first)
       const parseMonth = (monthStr: string) => {
         const [month, year] = monthStr.split('-');
         const monthIndex = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(month);
@@ -272,7 +262,6 @@ export const TrainerPerformanceSection = () => {
           case 'totalPaid':
             data[trainer][month] = trainerData?.totalPaid || 0;
             break;
-          case 'classAverage':
           case 'classAverageExclEmpty':
             data[trainer][month] = trainerData?.classAverageExclEmpty || 0;
             break;
@@ -283,13 +272,13 @@ export const TrainerPerformanceSection = () => {
             const retentionValue = typeof trainerData?.retention === 'string' 
               ? parseFloat(trainerData.retention.replace('%', '') || '0') 
               : trainerData?.retention || 0;
-            data[trainer][month] = isNaN(retentionValue) || !isFinite(retentionValue) ? 0 : retentionValue;
+            data[trainer][month] = isNaN(retentionValue) ? 0 : retentionValue;
             break;
           case 'conversion':
             const conversionValue = typeof trainerData?.conversion === 'string' 
               ? parseFloat(trainerData.conversion.replace('%', '') || '0') 
               : trainerData?.conversion || 0;
-            data[trainer][month] = isNaN(conversionValue) || !isFinite(conversionValue) ? 0 : conversionValue;
+            data[trainer][month] = isNaN(conversionValue) ? 0 : conversionValue;
             break;
           case 'emptySessions':
             data[trainer][month] = trainerData?.totalEmptySessions || 0;
@@ -318,53 +307,14 @@ export const TrainerPerformanceSection = () => {
     return { data, months, trainers };
   };
 
-  const getTopBottomTrainers = () => {
-    if (!filteredData.length) return [];
-    
-    return filteredData.map(trainer => ({
-      name: trainer.teacherName,
-      totalValue: trainer.totalPaid || 0,
-      unitsSold: trainer.totalSessions || 0,
-      transactions: trainer.totalSessions || 0,
-      uniqueMembers: trainer.totalCustomers || 0,
-      atv: (trainer.totalPaid || 0) / Math.max(trainer.totalSessions || 1, 1),
-      auv: (trainer.totalPaid || 0) / Math.max(trainer.totalSessions || 1, 1),
-      asv: (trainer.totalPaid || 0) / Math.max(trainer.totalCustomers || 1, 1),
-      upt: trainer.totalSessions || 0
-    }));
-  };
-
-  const getInsightsData = () => {
-    if (!filteredData.length) return [];
-    
-    return filteredData.map(trainer => ({
-      name: trainer.teacherName,
-      totalValue: trainer.totalPaid || 0,
-      conversion: typeof trainer.conversion === 'string' 
-        ? parseFloat(trainer.conversion.replace('%', '') || '0') 
-        : trainer.conversion || 0,
-      sessions: trainer.totalSessions || 0,
-      uniqueMembers: trainer.totalCustomers || 0
-    }));
-  };
-
-  const getWordCloudData = () => {
-    return filteredData.map(trainer => ({
-      name: trainer.teacherName,
-      conversion: typeof trainer.conversion === 'string' 
-        ? parseFloat(trainer.conversion.replace('%', '') || '0') 
-        : trainer.conversion || 0,
-      totalValue: trainer.totalPaid || 0,
-      sessions: trainer.totalSessions || 0
-    }));
-  };
-
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading trainer performance data...</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-slate-600">Loading trainer performance data...</p>
+          </div>
         </div>
       </div>
     );
@@ -372,9 +322,11 @@ export const TrainerPerformanceSection = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <p className="text-red-600">Error loading trainer performance data: {error}</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <p className="text-red-600">Error loading trainer performance data: {error}</p>
+          </div>
         </div>
       </div>
     );
@@ -382,9 +334,11 @@ export const TrainerPerformanceSection = () => {
 
   if (!rawData || rawData.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <p className="text-slate-600">No trainer performance data available</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <p className="text-slate-600">No trainer performance data available</p>
+          </div>
         </div>
       </div>
     );
@@ -392,23 +346,10 @@ export const TrainerPerformanceSection = () => {
 
   const metricCards = getMetricCards();
   const { data: monthOnMonthData, months, trainers } = getMonthOnMonthData();
-  const topBottomData = getTopBottomTrainers();
-  const insightsData = getInsightsData();
-  const wordCloudData = getWordCloudData();
-  const conversionChartData = getConversionChartData();
+  const trainerPerformanceData = getTrainerPerformanceData();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
-      {/* Enhanced Header Section */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-indigo-600/20" />
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,_rgba(120,119,198,0.3),_transparent_50%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,_rgba(255,255,255,0.1),_transparent_50%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_40%,_rgba(120,119,198,0.2),_transparent_50%)]" />
-        </div>
-      </div>
-
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
         {/* Location Tabs */}
         <Card className="bg-white/80 backdrop-blur-sm shadow-xl border-0 overflow-hidden">
@@ -444,6 +385,50 @@ export const TrainerPerformanceSection = () => {
           </CardContent>
         </Card>
 
+        {/* Quick Summary Cards */}
+        {processedData && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-xl border-0">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-medium opacity-90">Top Revenue Trainer</h3>
+                    <p className="text-2xl font-bold">{processedData.topRevenueTrainer?.teacherName || 'N/A'}</p>
+                    <p className="text-sm opacity-80">{formatCurrency(processedData.topRevenueTrainer?.totalPaid || 0)}</p>
+                  </div>
+                  <Crown className="w-8 h-8 opacity-80" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white shadow-xl border-0">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-medium opacity-90">Most Sessions</h3>
+                    <p className="text-2xl font-bold">{processedData.topSessionsTrainer?.teacherName || 'N/A'}</p>
+                    <p className="text-sm opacity-80">{formatNumber(processedData.topSessionsTrainer?.totalSessions || 0)} sessions</p>
+                  </div>
+                  <Trophy className="w-8 h-8 opacity-80" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-xl border-0">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-medium opacity-90">Most Students</h3>
+                    <p className="text-2xl font-bold">{processedData.topCustomersTrainer?.teacherName || 'N/A'}</p>
+                    <p className="text-sm opacity-80">{formatNumber(processedData.topCustomersTrainer?.totalCustomers || 0)} students</p>
+                  </div>
+                  <Star className="w-8 h-8 opacity-80" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Quick Filters */}
         {processedData && (
           <TrainerQuickFilters 
@@ -455,7 +440,7 @@ export const TrainerPerformanceSection = () => {
           />
         )}
 
-        {/* Filter Section */}
+        {/* Filter Section - Collapsed by default */}
         <TrainerFilterSection 
           data={filteredData} 
           onFiltersChange={setFilters} 
@@ -473,19 +458,9 @@ export const TrainerPerformanceSection = () => {
           <TrainerDetailedPerformanceTable data={filteredData} />
         )}
 
-        {/* Insights and Word Cloud */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="lg:col-span-2">
-            <TrainerInsights data={insightsData} />
-          </div>
-          <div className="lg:col-span-1">
-            <TrainerWordCloud data={wordCloudData} />
-          </div>
-        </div>
-
         {/* Top/Bottom Performers */}
-        {topBottomData.length > 0 && (
-          <TopBottomSellers data={topBottomData} type="trainers" title="Trainer Performance" />
+        {trainerPerformanceData.length > 0 && (
+          <TopBottomSellers data={trainerPerformanceData} type="trainers" title="Trainer Performance Rankings" />
         )}
 
         {/* Month-on-Month Analysis */}
@@ -516,34 +491,6 @@ export const TrainerPerformanceSection = () => {
                             "hover:bg-white/60",
                             `data-[state=active]:${metric.color}`
                           )}
-                        >
-                          <IconComponent className="w-3 h-3 mr-1" />
-                          {metric.label}
-                        </TabsTrigger>
-                      );
-                    })}
-                  </TabsList>
-                </Tabs>
-              </div>
-              <div className="mt-4">
-                <Tabs value={activeMetric} onValueChange={(value) => setActiveMetric(value as TrainerMetricType)}>
-                  <TabsList className="bg-gradient-to-r from-slate-100 to-slate-200 p-2 rounded-2xl shadow-lg flex flex-wrap gap-1">
-                    {[
-                      { key: 'conversion' as const, label: 'Conversion', icon: Target },
-                      { key: 'emptySessions' as const, label: 'Empty Classes', icon: Calendar },
-                      { key: 'newMembers' as const, label: 'New Members', icon: Users },
-                      { key: 'classAverageExclEmpty' as const, label: 'Class Avg', icon: BarChart3 },
-                      { key: 'cycleSessions' as const, label: 'Cycle Sessions', icon: Activity },
-                      { key: 'barreSessions' as const, label: 'Barre Sessions', icon: Activity },
-                      { key: 'retainedMembers' as const, label: 'Retained', icon: Award },
-                      { key: 'convertedMembers' as const, label: 'Converted', icon: Target }
-                    ].map(metric => {
-                      const IconComponent = metric.icon;
-                      return (
-                        <TabsTrigger 
-                          key={metric.key} 
-                          value={metric.key} 
-                          className="rounded-lg px-2 py-1 text-xs font-semibold transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-600 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-white/60"
                         >
                           <IconComponent className="w-3 h-3 mr-1" />
                           {metric.label}
