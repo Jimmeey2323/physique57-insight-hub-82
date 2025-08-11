@@ -187,7 +187,9 @@ export type TrainerMetricType =
   | 'cycleSessions'
   | 'barreSessions'
   | 'retainedMembers'
-  | 'convertedMembers';
+  | 'convertedMembers'
+  | 'cycleRevenue'
+  | 'barreRevenue';
 
 // Year-on-year specific metric types
 export type YearOnYearMetricType = 

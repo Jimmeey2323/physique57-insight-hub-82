@@ -195,28 +195,76 @@ export const TrainerPerformanceSection = () => {
         calculation: 'Sum of cycle and barre payments'
       },
       {
-        title: 'Avg Class Size',
+        title: 'Empty Sessions',
+        value: formatNumber(processedData.totalEmptySessions),
+        change: -8.2,
+        icon: 'sessions' as const,
+        description: 'Total sessions with no attendance',
+        calculation: 'Sum of empty cycle and barre sessions'
+      },
+      {
+        title: 'Non-Empty Sessions',
+        value: formatNumber(processedData.totalNonEmptySessions),
+        change: 14.1,
+        icon: 'sessions' as const,
+        description: 'Total sessions with member attendance',
+        calculation: 'Total sessions minus empty sessions'
+      },
+      {
+        title: 'New Members',
+        value: formatNumber(processedData.totalNewMembers),
+        change: 22.3,
+        icon: 'members' as const,
+        description: 'New members acquired',
+        calculation: 'Sum of new member acquisitions'
+      },
+      {
+        title: 'Converted Members',
+        value: formatNumber(processedData.totalConverted),
+        change: 18.5,
+        icon: 'members' as const,
+        description: 'Members who converted from trial',
+        calculation: 'Sum of member conversions'
+      },
+      {
+        title: 'Retained Members',
+        value: formatNumber(processedData.totalRetained),
+        change: 11.7,
+        icon: 'members' as const,
+        description: 'Members successfully retained',
+        calculation: 'Sum of member retentions'
+      },
+      {
+        title: 'Avg Conversion Rate',
+        value: `${processedData.avgConversion.toFixed(1)}%`,
+        change: 3.2,
+        icon: 'efficiency' as const,
+        description: 'Average conversion rate across trainers',
+        calculation: 'Average of trainer conversion rates'
+      },
+      {
+        title: 'Avg Retention Rate',
+        value: `${processedData.avgRetention.toFixed(1)}%`,
+        change: 2.8,
+        icon: 'efficiency' as const,
+        description: 'Average retention rate across trainers',
+        calculation: 'Average of trainer retention rates'
+      },
+      {
+        title: 'Avg Class Size (Incl Empty)',
+        value: (processedData.totalSessions > 0 ? processedData.totalCustomers / processedData.totalSessions : 0).toFixed(1),
+        change: -1.5,
+        icon: 'efficiency' as const,
+        description: 'Average members per class including empty sessions',
+        calculation: 'Total customers / Total sessions'
+      },
+      {
+        title: 'Avg Class Size (Excl Empty)',
         value: processedData.avgClassSize.toFixed(1),
         change: -2.1,
         icon: 'efficiency' as const,
         description: 'Average members per non-empty class',
         calculation: 'Total customers / Non-empty sessions'
-      },
-      {
-        title: 'Revenue/Session',
-        value: formatCurrency(processedData.revenuePerSession),
-        change: 5.2,
-        icon: 'efficiency' as const,
-        description: 'Average revenue per session',
-        calculation: 'Total revenue / Total sessions'
-      },
-      {
-        title: 'Utilization Rate',
-        value: `${processedData.utilizationRate.toFixed(1)}%`,
-        change: 3.8,
-        icon: 'efficiency' as const,
-        description: 'Percentage of non-empty sessions',
-        calculation: 'Non-empty sessions / Total sessions'
       }
     ];
   };
@@ -283,17 +331,20 @@ export const TrainerPerformanceSection = () => {
           case 'totalPaid':
             data[trainer][month] = trainerData?.totalPaid || 0;
             break;
-          case 'classAverageExclEmpty':
-            data[trainer][month] = trainerData?.classAverageExclEmpty || 0;
+          case 'emptySessions':
+            data[trainer][month] = trainerData?.totalEmptySessions || 0;
             break;
-          case 'classAverageInclEmpty':
-            data[trainer][month] = trainerData?.classAverageInclEmpty || 0;
+          case 'nonEmptySessions':
+            data[trainer][month] = trainerData?.totalNonEmptySessions || 0;
             break;
-          case 'retention':
-            const retentionValue = typeof trainerData?.retention === 'string' 
-              ? parseFloat(trainerData.retention.replace('%', '') || '0') 
-              : trainerData?.retention || 0;
-            data[trainer][month] = isNaN(retentionValue) ? 0 : retentionValue;
+          case 'newMembers':
+            data[trainer][month] = trainerData?.new || 0;
+            break;
+          case 'convertedMembers':
+            data[trainer][month] = trainerData?.converted || 0;
+            break;
+          case 'retainedMembers':
+            data[trainer][month] = trainerData?.retained || 0;
             break;
           case 'conversion':
             const conversionValue = typeof trainerData?.conversion === 'string' 
@@ -301,23 +352,23 @@ export const TrainerPerformanceSection = () => {
               : trainerData?.conversion || 0;
             data[trainer][month] = isNaN(conversionValue) ? 0 : conversionValue;
             break;
-          case 'emptySessions':
-            data[trainer][month] = trainerData?.totalEmptySessions || 0;
+          case 'retention':
+            const retentionValue = typeof trainerData?.retention === 'string' 
+              ? parseFloat(trainerData.retention.replace('%', '') || '0') 
+              : trainerData?.retention || 0;
+            data[trainer][month] = isNaN(retentionValue) ? 0 : retentionValue;
             break;
-          case 'newMembers':
-            data[trainer][month] = trainerData?.new || 0;
+          case 'classAverageInclEmpty':
+            data[trainer][month] = trainerData?.classAverageInclEmpty || 0;
             break;
-          case 'cycleSessions':
-            data[trainer][month] = trainerData?.cycleSessions || 0;
+          case 'classAverageExclEmpty':
+            data[trainer][month] = trainerData?.classAverageExclEmpty || 0;
             break;
-          case 'barreSessions':
-            data[trainer][month] = trainerData?.barreSessions || 0;
+          case 'cycleRevenue':
+            data[trainer][month] = trainerData?.cyclePaid || 0;
             break;
-          case 'retainedMembers':
-            data[trainer][month] = trainerData?.retained || 0;
-            break;
-          case 'convertedMembers':
-            data[trainer][month] = trainerData?.converted || 0;
+          case 'barreRevenue':
+            data[trainer][month] = trainerData?.barrePaid || 0;
             break;
           default:
             data[trainer][month] = trainerData?.totalSessions || 0;
@@ -494,11 +545,13 @@ export const TrainerPerformanceSection = () => {
                   Month-on-Month Performance Analysis
                 </CardTitle>
                 <Tabs value={activeMetric} onValueChange={(value) => setActiveMetric(value as TrainerMetricType)}>
-                  <TabsList className="bg-gradient-to-r from-slate-100 to-slate-200 p-2 rounded-2xl shadow-lg grid grid-cols-4 gap-1">
+                  <TabsList className="bg-gradient-to-r from-slate-100 to-slate-200 p-2 rounded-2xl shadow-lg grid grid-cols-6 gap-1">
                     {[
                       { key: 'totalSessions' as const, label: 'Sessions', icon: Calendar, color: 'from-blue-500 to-cyan-600' },
                       { key: 'totalCustomers' as const, label: 'Members', icon: Users, color: 'from-green-500 to-emerald-600' },
                       { key: 'totalPaid' as const, label: 'Revenue', icon: DollarSign, color: 'from-purple-500 to-violet-600' },
+                      { key: 'emptySessions' as const, label: 'Empty', icon: Activity, color: 'from-red-500 to-red-600' },
+                      { key: 'conversion' as const, label: 'Conversion', icon: Target, color: 'from-orange-500 to-orange-600' },
                       { key: 'retention' as const, label: 'Retention', icon: Award, color: 'from-pink-500 to-rose-600' }
                     ].map(metric => {
                       const IconComponent = metric.icon;
