@@ -182,6 +182,7 @@ export type TrainerMetricType =
   | 'retention' 
   | 'conversion' 
   | 'emptySessions' 
+  | 'nonEmptySessions'
   | 'newMembers'
   | 'cycleSessions'
   | 'barreSessions'

@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -117,21 +118,27 @@ export const TrainerPerformanceSection = () => {
     const utilizationRate = totalSessions > 0 ? ((totalSessions - totalEmptySessions) / totalSessions) * 100 : 0;
     const revenuePerCustomer = totalCustomers > 0 ? totalRevenue / totalCustomers : 0;
 
-    // Top performers
-    const topRevenueTrainer = filteredData.reduce((max, item) => 
-      (item.totalPaid || 0) > (max.totalPaid || 0) ? item : max, 
-      filteredData[0] || {}
-    );
+    // Top performers with proper null checks
+    const topRevenueTrainer = filteredData.length > 0 
+      ? filteredData.reduce((max, item) => 
+          (item.totalPaid || 0) > (max?.totalPaid || 0) ? item : max, 
+          filteredData[0]
+        ) 
+      : null;
 
-    const topSessionsTrainer = filteredData.reduce((max, item) => 
-      (item.totalSessions || 0) > (max.totalSessions || 0) ? item : max, 
-      filteredData[0] || {}
-    );
+    const topSessionsTrainer = filteredData.length > 0 
+      ? filteredData.reduce((max, item) => 
+          (item.totalSessions || 0) > (max?.totalSessions || 0) ? item : max, 
+          filteredData[0]
+        ) 
+      : null;
 
-    const topCustomersTrainer = filteredData.reduce((max, item) => 
-      (item.totalCustomers || 0) > (max.totalCustomers || 0) ? item : max, 
-      filteredData[0] || {}
-    );
+    const topCustomersTrainer = filteredData.length > 0 
+      ? filteredData.reduce((max, item) => 
+          (item.totalCustomers || 0) > (max?.totalCustomers || 0) ? item : max, 
+          filteredData[0]
+        ) 
+      : null;
 
     return {
       totalSessions,
@@ -172,11 +179,11 @@ export const TrainerPerformanceSection = () => {
         calculation: 'Sum of cycle and barre sessions'
       },
       {
-        title: 'Total Students',
+        title: 'Total Members',
         value: formatNumber(processedData.totalCustomers),
         change: 8.3,
         icon: 'members' as const,
-        description: 'Total unique students trained',
+        description: 'Total unique members trained',
         calculation: 'Sum of cycle and barre customers'
       },
       {
@@ -192,7 +199,7 @@ export const TrainerPerformanceSection = () => {
         value: processedData.avgClassSize.toFixed(1),
         change: -2.1,
         icon: 'efficiency' as const,
-        description: 'Average students per non-empty class',
+        description: 'Average members per non-empty class',
         calculation: 'Total customers / Non-empty sessions'
       },
       {
@@ -228,7 +235,21 @@ export const TrainerPerformanceSection = () => {
       location: trainer.location,
       month: trainer.monthYear,
       efficiency: trainer.totalSessions > 0 ? (trainer.totalPaid || 0) / trainer.totalSessions : 0,
-      utilization: trainer.totalSessions > 0 ? ((trainer.totalSessions - (trainer.totalEmptySessions || 0)) / trainer.totalSessions) * 100 : 0
+      utilization: trainer.totalSessions > 0 ? ((trainer.totalSessions - (trainer.totalEmptySessions || 0)) / trainer.totalSessions) * 100 : 0,
+      // Enhanced drill-down data
+      emptySessions: trainer.totalEmptySessions || 0,
+      nonEmptySessions: trainer.totalNonEmptySessions || 0,
+      newMembers: trainer.new || 0,
+      converted: trainer.converted || 0,
+      retained: trainer.retained || 0,
+      conversionRate: typeof trainer.conversion === 'string' ? parseFloat(trainer.conversion.replace('%', '') || '0') : trainer.conversion || 0,
+      retentionRate: typeof trainer.retention === 'string' ? parseFloat(trainer.retention.replace('%', '') || '0') : trainer.retention || 0,
+      classAvgInclEmpty: trainer.classAverageInclEmpty || 0,
+      classAvgExclEmpty: trainer.classAverageExclEmpty || 0,
+      cycleSessions: trainer.cycleSessions || 0,
+      barreSessions: trainer.barreSessions || 0,
+      cycleRevenue: trainer.cyclePaid || 0,
+      barreRevenue: trainer.barrePaid || 0
     }));
   };
 
@@ -418,9 +439,9 @@ export const TrainerPerformanceSection = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-medium opacity-90">Most Students</h3>
+                    <h3 className="text-sm font-medium opacity-90">Most Members</h3>
                     <p className="text-2xl font-bold">{processedData.topCustomersTrainer?.teacherName || 'N/A'}</p>
-                    <p className="text-sm opacity-80">{formatNumber(processedData.topCustomersTrainer?.totalCustomers || 0)} students</p>
+                    <p className="text-sm opacity-80">{formatNumber(processedData.topCustomersTrainer?.totalCustomers || 0)} members</p>
                   </div>
                   <Star className="w-8 h-8 opacity-80" />
                 </div>
@@ -476,7 +497,7 @@ export const TrainerPerformanceSection = () => {
                   <TabsList className="bg-gradient-to-r from-slate-100 to-slate-200 p-2 rounded-2xl shadow-lg grid grid-cols-4 gap-1">
                     {[
                       { key: 'totalSessions' as const, label: 'Sessions', icon: Calendar, color: 'from-blue-500 to-cyan-600' },
-                      { key: 'totalCustomers' as const, label: 'Students', icon: Users, color: 'from-green-500 to-emerald-600' },
+                      { key: 'totalCustomers' as const, label: 'Members', icon: Users, color: 'from-green-500 to-emerald-600' },
                       { key: 'totalPaid' as const, label: 'Revenue', icon: DollarSign, color: 'from-purple-500 to-violet-600' },
                       { key: 'retention' as const, label: 'Retention', icon: Award, color: 'from-pink-500 to-rose-600' }
                     ].map(metric => {

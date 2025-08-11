@@ -64,18 +64,18 @@ export const MonthOnMonthTrainerTable = ({
       case 'totalSessions':
         return 'Total Sessions';
       case 'totalCustomers':
-        return 'Total Students';
+        return 'Total Members';
       case 'totalPaid':
-        return 'Total Revenue';
+        return 'Total Revenue (₹)';
       case 'classAverage':
       case 'classAverageExclEmpty':
         return 'Class Average (Excl Empty)';
       case 'classAverageInclEmpty':
         return 'Class Average (Incl Empty)';
       case 'retention':
-        return 'Retention Rate';
+        return 'Retention Rate (%)';
       case 'conversion':
-        return 'Conversion Rate';
+        return 'Conversion Rate (%)';
       case 'emptySessions':
         return 'Empty Sessions';
       case 'newMembers':
@@ -130,8 +130,8 @@ export const MonthOnMonthTrainerTable = ({
       <div className="bg-gradient-to-br from-white via-slate-50/30 to-white border-0 shadow-xl rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader>
-              <TableRow className="bg-gradient-to-r from-slate-50 to-slate-100 border-b-2">
+            <TableHeader className="sticky top-0 z-20 bg-gradient-to-r from-slate-50 to-slate-100">
+              <TableRow className="border-b-2">
                 <TableHead className="font-bold text-slate-700 sticky left-0 bg-gradient-to-r from-slate-50 to-slate-100 z-10 min-w-[200px]">
                   <Button
                     variant="ghost"
@@ -148,7 +148,7 @@ export const MonthOnMonthTrainerTable = ({
                   </Button>
                 </TableHead>
                 {sortedMonths.map((month) => (
-                  <TableHead key={month} className="text-center font-bold text-slate-700 min-w-[120px]">
+                  <TableHead key={month} className="text-center font-bold text-slate-700 min-w-[140px]">
                     <Button
                       variant="ghost"
                       onClick={() => {
@@ -164,8 +164,8 @@ export const MonthOnMonthTrainerTable = ({
                     </Button>
                   </TableHead>
                 ))}
-                <TableHead className="text-center font-bold text-slate-700 min-w-[100px]">Change</TableHead>
-                <TableHead className="text-center font-bold text-slate-700 min-w-[100px]">Total</TableHead>
+                <TableHead className="text-center font-bold text-slate-700 min-w-[100px]">MoM Change</TableHead>
+                <TableHead className="text-center font-bold text-slate-700 min-w-[120px]">Total</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
