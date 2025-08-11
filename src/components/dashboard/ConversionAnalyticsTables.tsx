@@ -21,7 +21,7 @@ export const ConversionAnalyticsTables: React.FC<ConversionAnalyticsTablesProps>
   const [viewMode, setViewMode] = useState<'month' | 'year'>('month');
   const [sortBy, setSortBy] = useState<'conversions' | 'ltv' | 'retention'>('conversions');
 
-  // Lead source analysis
+  // Lead source analysis with enhanced metrics
   const sourceStats = data.reduce((acc, client) => {
     const source = client.firstVisitEntityName || 'Unknown';
     if (!acc[source]) {
@@ -29,120 +29,178 @@ export const ConversionAnalyticsTables: React.FC<ConversionAnalyticsTablesProps>
         source,
         leads: 0,
         trials: 0,
+        trialsCompleted: 0,
         conversions: 0,
         retained: 0,
         totalLTV: 0,
+        totalConversionSpan: 0,
+        totalPostTrialClasses: 0,
         conversionRate: 0,
         retentionRate: 0,
-        avgLTV: 0
+        leadToTrialRate: 0,
+        trialToMemberRate: 0,
+        avgLTV: 0,
+        avgConversionSpan: 0,
+        avgPostTrialClasses: 0
       };
     }
     
     acc[source].leads++;
-    if (client.visitsPostTrial > 0) acc[source].trials++;
+    if (client.visitsPostTrial > 0) {
+      acc[source].trials++;
+      acc[source].trialsCompleted++;
+    }
     if (client.conversionStatus === 'Converted') acc[source].conversions++;
     if (client.retentionStatus === 'Retained') acc[source].retained++;
     acc[source].totalLTV += client.ltv || 0;
+    acc[source].totalConversionSpan += client.conversionSpan || 0;
+    acc[source].totalPostTrialClasses += client.visitsPostTrial || 0;
     
     return acc;
   }, {} as Record<string, any>);
 
-  // Calculate rates for sources
+  // Calculate enhanced rates for sources
   Object.values(sourceStats).forEach((stats: any) => {
     stats.conversionRate = stats.leads > 0 ? (stats.conversions / stats.leads) * 100 : 0;
     stats.retentionRate = stats.leads > 0 ? (stats.retained / stats.leads) * 100 : 0;
+    stats.leadToTrialRate = stats.leads > 0 ? (stats.trialsCompleted / stats.leads) * 100 : 0;
+    stats.trialToMemberRate = stats.trialsCompleted > 0 ? (stats.conversions / stats.trialsCompleted) * 100 : 0;
     stats.avgLTV = stats.leads > 0 ? stats.totalLTV / stats.leads : 0;
+    stats.avgConversionSpan = stats.conversions > 0 ? stats.totalConversionSpan / stats.conversions : 0;
+    stats.avgPostTrialClasses = stats.trialsCompleted > 0 ? stats.totalPostTrialClasses / stats.trialsCompleted : 0;
   });
 
   const sourceList = Object.values(sourceStats) as any[];
 
-  // Lead stage analysis (by first visit type)
+  // Lead stage analysis with enhanced metrics
   const stageStats = data.reduce((acc, client) => {
     const stage = client.firstVisitType || 'Unknown';
     if (!acc[stage]) {
       acc[stage] = {
         stage,
         leads: 0,
+        trialsCompleted: 0,
         conversions: 0,
         retained: 0,
         totalLTV: 0,
+        totalConversionSpan: 0,
+        totalPostTrialClasses: 0,
         conversionRate: 0,
-        retentionRate: 0
+        retentionRate: 0,
+        leadToTrialRate: 0,
+        trialToMemberRate: 0,
+        avgConversionSpan: 0,
+        avgPostTrialClasses: 0
       };
     }
     
     acc[stage].leads++;
+    if (client.visitsPostTrial > 0) acc[stage].trialsCompleted++;
     if (client.conversionStatus === 'Converted') acc[stage].conversions++;
     if (client.retentionStatus === 'Retained') acc[stage].retained++;
     acc[stage].totalLTV += client.ltv || 0;
+    acc[stage].totalConversionSpan += client.conversionSpan || 0;
+    acc[stage].totalPostTrialClasses += client.visitsPostTrial || 0;
     
     return acc;
   }, {} as Record<string, any>);
 
-  // Calculate rates for stages
+  // Calculate enhanced rates for stages
   Object.values(stageStats).forEach((stats: any) => {
     stats.conversionRate = stats.leads > 0 ? (stats.conversions / stats.leads) * 100 : 0;
     stats.retentionRate = stats.leads > 0 ? (stats.retained / stats.leads) * 100 : 0;
+    stats.leadToTrialRate = stats.leads > 0 ? (stats.trialsCompleted / stats.leads) * 100 : 0;
+    stats.trialToMemberRate = stats.trialsCompleted > 0 ? (stats.conversions / stats.trialsCompleted) * 100 : 0;
+    stats.avgConversionSpan = stats.conversions > 0 ? stats.totalConversionSpan / stats.conversions : 0;
+    stats.avgPostTrialClasses = stats.trialsCompleted > 0 ? stats.totalPostTrialClasses / stats.trialsCompleted : 0;
   });
 
   const stageList = Object.values(stageStats) as any[];
 
-  // Associate performance (by trainer)
+  // Associate performance with enhanced metrics
   const associateStats = data.reduce((acc, client) => {
     const associate = client.trainerName || 'Unknown';
     if (!acc[associate]) {
       acc[associate] = {
         associate,
         leads: 0,
+        trialsCompleted: 0,
         conversions: 0,
         retained: 0,
         totalLTV: 0,
+        totalConversionSpan: 0,
+        totalPostTrialClasses: 0,
         conversionRate: 0,
-        retentionRate: 0
+        retentionRate: 0,
+        leadToTrialRate: 0,
+        trialToMemberRate: 0,
+        avgConversionSpan: 0,
+        avgPostTrialClasses: 0
       };
     }
     
     acc[associate].leads++;
+    if (client.visitsPostTrial > 0) acc[associate].trialsCompleted++;
     if (client.conversionStatus === 'Converted') acc[associate].conversions++;
     if (client.retentionStatus === 'Retained') acc[associate].retained++;
     acc[associate].totalLTV += client.ltv || 0;
+    acc[associate].totalConversionSpan += client.conversionSpan || 0;
+    acc[associate].totalPostTrialClasses += client.visitsPostTrial || 0;
     
     return acc;
   }, {} as Record<string, any>);
 
-  // Calculate rates for associates
+  // Calculate enhanced rates for associates
   Object.values(associateStats).forEach((stats: any) => {
     stats.conversionRate = stats.leads > 0 ? (stats.conversions / stats.leads) * 100 : 0;
     stats.retentionRate = stats.leads > 0 ? (stats.retained / stats.leads) * 100 : 0;
+    stats.leadToTrialRate = stats.leads > 0 ? (stats.trialsCompleted / stats.leads) * 100 : 0;
+    stats.trialToMemberRate = stats.trialsCompleted > 0 ? (stats.conversions / stats.trialsCompleted) * 100 : 0;
+    stats.avgConversionSpan = stats.conversions > 0 ? stats.totalConversionSpan / stats.conversions : 0;
+    stats.avgPostTrialClasses = stats.trialsCompleted > 0 ? stats.totalPostTrialClasses / stats.trialsCompleted : 0;
   });
 
   const associateList = Object.values(associateStats) as any[];
 
-  // Class type analysis (by first visit type but more detailed)
+  // Class type analysis with enhanced metrics
   const classTypeStats = data.reduce((acc, client) => {
     const classType = client.membershipUsed || client.firstVisitType || 'Unknown';
     if (!acc[classType]) {
       acc[classType] = {
         classType,
         leads: 0,
+        trialsCompleted: 0,
         conversions: 0,
         retained: 0,
         totalLTV: 0,
-        conversionRate: 0
+        totalConversionSpan: 0,
+        totalPostTrialClasses: 0,
+        conversionRate: 0,
+        leadToTrialRate: 0,
+        trialToMemberRate: 0,
+        avgConversionSpan: 0,
+        avgPostTrialClasses: 0
       };
     }
     
     acc[classType].leads++;
+    if (client.visitsPostTrial > 0) acc[classType].trialsCompleted++;
     if (client.conversionStatus === 'Converted') acc[classType].conversions++;
     if (client.retentionStatus === 'Retained') acc[classType].retained++;
     acc[classType].totalLTV += client.ltv || 0;
+    acc[classType].totalConversionSpan += client.conversionSpan || 0;
+    acc[classType].totalPostTrialClasses += client.visitsPostTrial || 0;
     
     return acc;
   }, {} as Record<string, any>);
 
-  // Calculate rates for class types
+  // Calculate enhanced rates for class types
   Object.values(classTypeStats).forEach((stats: any) => {
     stats.conversionRate = stats.leads > 0 ? (stats.conversions / stats.leads) * 100 : 0;
+    stats.leadToTrialRate = stats.leads > 0 ? (stats.trialsCompleted / stats.leads) * 100 : 0;
+    stats.trialToMemberRate = stats.trialsCompleted > 0 ? (stats.conversions / stats.trialsCompleted) * 100 : 0;
+    stats.avgConversionSpan = stats.conversions > 0 ? stats.totalConversionSpan / stats.conversions : 0;
+    stats.avgPostTrialClasses = stats.trialsCompleted > 0 ? stats.totalPostTrialClasses / stats.trialsCompleted : 0;
   });
 
   const classTypeList = Object.values(classTypeStats) as any[];
@@ -201,12 +259,13 @@ export const ConversionAnalyticsTables: React.FC<ConversionAnalyticsTablesProps>
                     <TableRow>
                       <TableHead>Source</TableHead>
                       <TableHead className="text-right">Leads</TableHead>
-                      <TableHead className="text-right">Trials</TableHead>
+                      <TableHead className="text-right">Trials Completed</TableHead>
+                      <TableHead className="text-right">Lead→Trial %</TableHead>
                       <TableHead className="text-right">Conversions</TableHead>
-                      <TableHead className="text-right">Conv Rate</TableHead>
-                      <TableHead className="text-right">Retained</TableHead>
-                      <TableHead className="text-right">Total LTV</TableHead>
+                      <TableHead className="text-right">Trial→Member %</TableHead>
+                      <TableHead className="text-right">Avg Conv Span</TableHead>
                       <TableHead className="text-right">Avg LTV</TableHead>
+                      <TableHead className="text-right">Avg Classes Post Trial</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -218,16 +277,21 @@ export const ConversionAnalyticsTables: React.FC<ConversionAnalyticsTablesProps>
                       >
                         <TableCell className="font-medium">{source.source}</TableCell>
                         <TableCell className="text-right">{formatNumber(source.leads)}</TableCell>
-                        <TableCell className="text-right">{formatNumber(source.trials)}</TableCell>
-                        <TableCell className="text-right">{formatNumber(source.conversions)}</TableCell>
+                        <TableCell className="text-right">{formatNumber(source.trialsCompleted)}</TableCell>
                         <TableCell className="text-right">
-                          <Badge variant={source.conversionRate > 20 ? "default" : "secondary"}>
-                            {source.conversionRate.toFixed(1)}%
+                          <Badge variant={source.leadToTrialRate > 50 ? "default" : "secondary"}>
+                            {source.leadToTrialRate.toFixed(1)}%
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">{formatNumber(source.retained)}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(source.totalLTV)}</TableCell>
+                        <TableCell className="text-right">{formatNumber(source.conversions)}</TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant={source.trialToMemberRate > 30 ? "default" : "secondary"}>
+                            {source.trialToMemberRate.toFixed(1)}%
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">{source.avgConversionSpan.toFixed(0)} days</TableCell>
                         <TableCell className="text-right">{formatCurrency(source.avgLTV)}</TableCell>
+                        <TableCell className="text-right">{source.avgPostTrialClasses.toFixed(1)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -257,11 +321,12 @@ export const ConversionAnalyticsTables: React.FC<ConversionAnalyticsTablesProps>
                     <TableRow>
                       <TableHead>Stage</TableHead>
                       <TableHead className="text-right">Leads</TableHead>
+                      <TableHead className="text-right">Trials Completed</TableHead>
+                      <TableHead className="text-right">Lead→Trial %</TableHead>
                       <TableHead className="text-right">Conversions</TableHead>
-                      <TableHead className="text-right">Conv Rate</TableHead>
-                      <TableHead className="text-right">Retained</TableHead>
-                      <TableHead className="text-right">Retention Rate</TableHead>
-                      <TableHead className="text-right">Total LTV</TableHead>
+                      <TableHead className="text-right">Trial→Member %</TableHead>
+                      <TableHead className="text-right">Avg Conv Span</TableHead>
+                      <TableHead className="text-right">Avg Classes Post Trial</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -273,19 +338,20 @@ export const ConversionAnalyticsTables: React.FC<ConversionAnalyticsTablesProps>
                       >
                         <TableCell className="font-medium">{stage.stage}</TableCell>
                         <TableCell className="text-right">{formatNumber(stage.leads)}</TableCell>
+                        <TableCell className="text-right">{formatNumber(stage.trialsCompleted)}</TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant={stage.leadToTrialRate > 50 ? "default" : "secondary"}>
+                            {stage.leadToTrialRate.toFixed(1)}%
+                          </Badge>
+                        </TableCell>
                         <TableCell className="text-right">{formatNumber(stage.conversions)}</TableCell>
                         <TableCell className="text-right">
-                          <Badge variant={stage.conversionRate > 15 ? "default" : "secondary"}>
-                            {stage.conversionRate.toFixed(1)}%
+                          <Badge variant={stage.trialToMemberRate > 30 ? "default" : "secondary"}>
+                            {stage.trialToMemberRate.toFixed(1)}%
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">{formatNumber(stage.retained)}</TableCell>
-                        <TableCell className="text-right">
-                          <Badge variant={stage.retentionRate > 25 ? "default" : "secondary"}>
-                            {stage.retentionRate.toFixed(1)}%
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">{formatCurrency(stage.totalLTV)}</TableCell>
+                        <TableCell className="text-right">{stage.avgConversionSpan.toFixed(0)} days</TableCell>
+                        <TableCell className="text-right">{stage.avgPostTrialClasses.toFixed(1)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -315,10 +381,12 @@ export const ConversionAnalyticsTables: React.FC<ConversionAnalyticsTablesProps>
                     <TableRow>
                       <TableHead>Associate</TableHead>
                       <TableHead className="text-right">Leads</TableHead>
+                      <TableHead className="text-right">Trials Completed</TableHead>
+                      <TableHead className="text-right">Lead→Trial %</TableHead>
                       <TableHead className="text-right">Conversions</TableHead>
-                      <TableHead className="text-right">Conv Rate</TableHead>
-                      <TableHead className="text-right">Retained</TableHead>
-                      <TableHead className="text-right">Total LTV</TableHead>
+                      <TableHead className="text-right">Trial→Member %</TableHead>
+                      <TableHead className="text-right">Avg Conv Span</TableHead>
+                      <TableHead className="text-right">Avg Classes Post Trial</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -330,14 +398,20 @@ export const ConversionAnalyticsTables: React.FC<ConversionAnalyticsTablesProps>
                       >
                         <TableCell className="font-medium">{associate.associate}</TableCell>
                         <TableCell className="text-right">{formatNumber(associate.leads)}</TableCell>
-                        <TableCell className="text-right">{formatNumber(associate.conversions)}</TableCell>
+                        <TableCell className="text-right">{formatNumber(associate.trialsCompleted)}</TableCell>
                         <TableCell className="text-right">
-                          <Badge variant={associate.conversionRate > 20 ? "default" : "secondary"}>
-                            {associate.conversionRate.toFixed(1)}%
+                          <Badge variant={associate.leadToTrialRate > 50 ? "default" : "secondary"}>
+                            {associate.leadToTrialRate.toFixed(1)}%
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">{formatNumber(associate.retained)}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(associate.totalLTV)}</TableCell>
+                        <TableCell className="text-right">{formatNumber(associate.conversions)}</TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant={associate.trialToMemberRate > 30 ? "default" : "secondary"}>
+                            {associate.trialToMemberRate.toFixed(1)}%
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">{associate.avgConversionSpan.toFixed(0)} days</TableCell>
+                        <TableCell className="text-right">{associate.avgPostTrialClasses.toFixed(1)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -367,10 +441,12 @@ export const ConversionAnalyticsTables: React.FC<ConversionAnalyticsTablesProps>
                     <TableRow>
                       <TableHead>Class Type</TableHead>
                       <TableHead className="text-right">Leads</TableHead>
+                      <TableHead className="text-right">Trials Completed</TableHead>
+                      <TableHead className="text-right">Lead→Trial %</TableHead>
                       <TableHead className="text-right">Conversions</TableHead>
-                      <TableHead className="text-right">Conv Rate</TableHead>
-                      <TableHead className="text-right">Retained</TableHead>
-                      <TableHead className="text-right">Total LTV</TableHead>
+                      <TableHead className="text-right">Trial→Member %</TableHead>
+                      <TableHead className="text-right">Avg Conv Span</TableHead>
+                      <TableHead className="text-right">Avg Classes Post Trial</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -382,14 +458,20 @@ export const ConversionAnalyticsTables: React.FC<ConversionAnalyticsTablesProps>
                       >
                         <TableCell className="font-medium">{classType.classType}</TableCell>
                         <TableCell className="text-right">{formatNumber(classType.leads)}</TableCell>
-                        <TableCell className="text-right">{formatNumber(classType.conversions)}</TableCell>
+                        <TableCell className="text-right">{formatNumber(classType.trialsCompleted)}</TableCell>
                         <TableCell className="text-right">
-                          <Badge variant={classType.conversionRate > 15 ? "default" : "secondary"}>
-                            {classType.conversionRate.toFixed(1)}%
+                          <Badge variant={classType.leadToTrialRate > 50 ? "default" : "secondary"}>
+                            {classType.leadToTrialRate.toFixed(1)}%
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">{formatNumber(classType.retained)}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(classType.totalLTV)}</TableCell>
+                        <TableCell className="text-right">{formatNumber(classType.conversions)}</TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant={classType.trialToMemberRate > 30 ? "default" : "secondary"}>
+                            {classType.trialToMemberRate.toFixed(1)}%
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">{classType.avgConversionSpan.toFixed(0)} days</TableCell>
+                        <TableCell className="text-right">{classType.avgPostTrialClasses.toFixed(1)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
